@@ -10,7 +10,6 @@
 //text box scroll contents
 //selecting only one face (the closest one)
 //select faces algo has offset errors
-//rename to avalanche, have a mountain logo, figure out how to make an executable
 //camera rotate tries to keep the up vector up somehow
 //create a new material
 //  add a (non-working) "<new material>" option
@@ -22,8 +21,9 @@
 //add a help button (someplace), or at least some help documentation someplace
 //lots of 3d z-fighting
 //save file completion bar
-//scale all totally screwed up on iron man
+//"scale all" totally screwed up on iron man
 //text boxes print floats to only 3 significant digits
+//millenium falcon loaded all black
 
 
 
