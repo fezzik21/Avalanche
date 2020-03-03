@@ -229,9 +229,12 @@ void settings() {
     oldHeight = 1024;
   }
   pixelDensity(displayDensity());
+  
+  PJOGL.setIcon("Avalanche_Icon.png");
 }  
 
 void setup() {
+  surface.setTitle("Avalanche 3D Modeler");  
   frameRate(30);
   surface.setResizable(true);
   
@@ -325,7 +328,7 @@ void setup() {
   registerCommands();
   thread("updateUI");
   textSize(12);
-  //sampleTexture = loadImage("Eye_D.jpg");
+  
 }
 
 void mouseWheel(MouseEvent event) {
