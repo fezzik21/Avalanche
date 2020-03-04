@@ -16,20 +16,56 @@ class Camera {
   
   void mouseDragged() {
     if(mouseButton == RIGHT) {
-      
-      Matrix4f modelViewMatrixInvert = new Matrix4f(w.modelViewMatrix).invert();
-      Vector3f up = new Vector3f();
-      modelViewMatrixInvert.transformDirection(0, 1, 0, up);
-      up.normalize(up);
-      
-      Vector3f right = new Vector3f();
-      modelViewMatrixInvert.transformDirection(1, 0, 0, right);
-      right.normalize(right);
-      
-      w.modelViewMatrix.rotate((w.selectMouseEndY - w.selectMouseStartY) * -(.31415 / 180.0) * ROTATE_SPEED, right);
-      w.modelViewMatrix.rotate((w.selectMouseEndX - w.selectMouseStartX) * (.31415 / 180.0) * ROTATE_SPEED, up);
-      w.selectMouseStartX = w.selectMouseEndX;
-      w.selectMouseStartY = w.selectMouseEndY;
+      if(!(keyPressed && keyCode == ALT)) {
+        //rotate around a point about 10 units in front of yourself
+        Matrix4f modelViewMatrixInvert = new Matrix4f(w.modelViewMatrix).invert();
+        Vector3f eye = new Vector3f();
+        modelViewMatrixInvert.getTranslation(eye);
+        Vector3f forward = new Vector3f();
+        modelViewMatrixInvert.transformDirection(0, 0, -1, forward);
+        forward.mul(2.0);
+        eye.add(forward);
+        //Vector3f dir = new Vector3f();
+        //modelViewMatrixInvert.positiveZ(dir);
+        //dir.mul(-10.0);
+        //eye.add(dir);        
+        
+        Vector3f right = new Vector3f();
+        modelViewMatrixInvert.transformDirection(-1, 0, 0, right);
+        Vector3f up = new Vector3f();
+        modelViewMatrixInvert.transformDirection(0, -1, 0, up);
+        w.modelViewMatrix.translate(eye.x, eye.y, eye.z)
+          .rotate((w.selectMouseEndY - w.selectMouseStartY) * -(.31415 / 180.0) * ROTATE_SPEED * 0.2, right)
+          .translate(-eye.x, -eye.y, -eye.z);
+          
+        /*modelViewMatrixInvert = new Matrix4f(w.modelViewMatrix).invert();
+        modelViewMatrixInvert.getTranslation(eye);
+        modelViewMatrixInvert.positiveZ(dir);
+        dir.mul(-10.0);
+        eye.add(dir);*/  
+          
+        w.modelViewMatrix.translate(eye.x, eye.y, eye.z)
+          .rotate((w.selectMouseEndX - w.selectMouseStartX) * -(.31415 / 180.0) * ROTATE_SPEED * 0.2, up)
+          .translate(-eye.x, -eye.y, -eye.z);
+          
+        w.selectMouseStartX = w.selectMouseEndX;
+        w.selectMouseStartY = w.selectMouseEndY;
+        w.debugPoint = eye;
+      } else {
+        Matrix4f modelViewMatrixInvert = new Matrix4f(w.modelViewMatrix).invert();
+        Vector3f up = new Vector3f();
+        modelViewMatrixInvert.transformDirection(0, 1, 0, up);
+        up.normalize(up);
+        
+        Vector3f right = new Vector3f();
+        modelViewMatrixInvert.transformDirection(1, 0, 0, right);
+        right.normalize(right);
+        
+        w.modelViewMatrix.rotate((w.selectMouseEndY - w.selectMouseStartY) * -(.31415 / 180.0) * ROTATE_SPEED, right);
+        w.modelViewMatrix.rotate((w.selectMouseEndX - w.selectMouseStartX) * (.31415 / 180.0) * ROTATE_SPEED, up);
+        w.selectMouseStartX = w.selectMouseEndX;
+        w.selectMouseStartY = w.selectMouseEndY;
+      }
     }
   }
   
@@ -99,11 +135,8 @@ class Camera {
         max.x = max(max.x, v.x);
         max.y = max(max.y, v.y);
         max.z = max(max.z, v.z);
-        //print("min = " + min.x + " , " + min.y + " , " + min.z + " \n");
-        //print("max = " + max.x + " , " + max.y + " , " + max.z + " \n");
     }
     scale = max((max.x - min.x), max(max.y - min.y, max.z - min.z));
-    //print("scale = " + scale + "\n");
     w.modelViewMatrix.setLookAt(centerOfMass.x, centerOfMass.y, centerOfMass.z + 1.2 * scale, 
       centerOfMass.x, centerOfMass.y, centerOfMass.z,
       0.0, -1.0, 0.0);

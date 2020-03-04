@@ -4,7 +4,13 @@ boolean isMousePressed = false;
 boolean isKeyPressed = false;
 boolean wasMousePressed = false;
 boolean wasKeyPressed = false;
+MouseEvent uiLastMouseWheelEvent = null;
+MouseEvent curMouseWheelEvent = null;
 
+void uiMouseWheel(MouseEvent event) {
+  uiLastMouseWheelEvent = event;
+}
+  
 boolean uiTakesKeyInput() {
   for (int i = elements.size()-1; i >= 0; i--) {
     UIElement e = elements.get(i);
@@ -33,6 +39,7 @@ boolean uiTakesMouseInput() {
 
 void updateUI() {
   while(true) {
+    curMouseWheelEvent = uiLastMouseWheelEvent;
     isMousePressed = mousePressed;
     isKeyPressed = keyPressed; 
     for (int i = elements.size()-1; i >= 0; i--) {
@@ -41,6 +48,9 @@ void updateUI() {
     }
     wasMousePressed = isMousePressed;
     wasKeyPressed = isKeyPressed;
+    if(curMouseWheelEvent != null) {
+      uiLastMouseWheelEvent = null;
+    }
   }
 }
 
@@ -285,6 +295,7 @@ class DropDownList extends UIElement {
   int selectedOption;
   boolean open;
   Thunk valueChanged;
+  int currentTopOptionShown;
   
   DropDownList(ArrayList<String> optionsIn, int xIn, int yIn, int wIn, int hIn, Thunk valueChangedIn, UIGroup group) {
     super(group);
@@ -294,21 +305,41 @@ class DropDownList extends UIElement {
     options = optionsIn;
     open = false;
     valueChanged = valueChangedIn;
-    selectedOption = 0;
-  }
+    selectedOption = 0;    
+    currentTopOptionShown = 0;
+  }  
   
   void update() {
+    int s = min(options.size(), DROP_DOWN_MAX);
     if((mouseX > x) && (mouseX < x + w) && (mouseY > y) && (mouseY < y + h)) {
       if(wasMousePressed && !isMousePressed) {
         open = !open;
       }      
     } else if (open &&
                (mouseX > (x + 10)) && (mouseX < (x + w - 10)) &&
-               (mouseY > (y + h)) && (mouseY < (y + h + options.size() * h))) {
+               (mouseY > (y + h)) && (mouseY < (y + h + s * h))) {
+        //println("mouseover");
       if(wasMousePressed && !isMousePressed) {        
-        selectedOption = (mouseY - (y + h)) / h;
+        selectedOption = ((mouseY - (y + h)) / h) + currentTopOptionShown;
+        currentTopOptionShown = selectedOption;
+        if(currentTopOptionShown > (options.size() - DROP_DOWN_MAX - 1)) {
+          currentTopOptionShown = (options.size() - DROP_DOWN_MAX - 1);
+        }
         open = false;
         valueChanged.apply();
+      } else if (curMouseWheelEvent != null) { 
+        float e = curMouseWheelEvent.getCount();
+        if(e > 0.0) {
+          currentTopOptionShown++;
+          if(currentTopOptionShown > (options.size() - DROP_DOWN_MAX - 1)) {
+            currentTopOptionShown = (options.size() - DROP_DOWN_MAX - 1);
+          }
+        } else {
+          currentTopOptionShown--;
+          if(currentTopOptionShown < 0) {
+            currentTopOptionShown = 0;
+          }
+        }
       }
     } else {
       if(wasMousePressed && !isMousePressed) {
@@ -323,6 +354,7 @@ class DropDownList extends UIElement {
     rect(x, y, w, h);
     fill(0, 0, 0);
     textAlign(LEFT, CENTER);
+    int s = min(options.size(), DROP_DOWN_MAX);
     if(selectedOption < options.size()) {
       text(options.get(selectedOption), x + 2, y, w, h);
     }
@@ -331,10 +363,10 @@ class DropDownList extends UIElement {
              x + w - 7, y + 11);
     if(open) {
       fill(255, 255, 255);
-      rect(x + 10, y + h, w - 10, options.size() * h);
+      rect(x + 10, y + h, w - 10, s * h);
       fill(0, 0, 0);
-      for(int i = 0 ; i < options.size(); ++i) {
-        text(options.get(i), x + 12, y + h + i * h, w - 10, h);
+      for(int i = 0 ; i < s; ++i) {
+        text(options.get(i + currentTopOptionShown), x + 12, y + h + i * h, w - 10, h);
       }
     }
   }

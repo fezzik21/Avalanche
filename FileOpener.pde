@@ -53,14 +53,15 @@ void loadMaterials(String s) throws IOException {
   while(scanner.hasNextLine()) {
     line = scanner.nextLine();
     String[] pieces = splitTokens(line, " ");
+    for(int pn = 0; pn < pieces.length; pn++) {
+      pieces[pn] = trim(pieces[pn]);
+    }
     if(pieces.length == 0) {
       continue;
     }
     if(pieces[0].equals("newmtl")) {
       m = new Material(pieces[1]);
-      println("add materials name " + m.name);
       materials.put(m.name, m);
-      println("mat count = " + materials.size());
     }
     if(pieces[0].equals("Ka")) {
       m.Ka = new Vector3f(float(pieces[1]), float(pieces[2]), float(pieces[3]));

@@ -1,6 +1,6 @@
 //undo feature (yikes!)
 //continue to implement FBX loader
-//select only front facing vertices (verts with front facing normals?)
+//checkbox for select only front facing vertices (verts with front facing normals?)
 //allow graphical editing of normals
 //Draw origin rotation frame of size relative to the scale
 //Allow for a simple "computational framework" (QScript)
@@ -8,9 +8,7 @@
 //rotate object mode
 //load other textures (e.g. bump, specular) (might require writing a custom shader?)
 //text box scroll contents
-//selecting only one face (the closest one)
 //select faces algo has offset errors
-//camera rotate tries to keep the up vector up somehow
 //create a new material
 //  add a (non-working) "<new material>" option
 //something's wrong with changing materials, the colors get screwed up eventually
@@ -18,13 +16,21 @@
 //allow material to load a new texture
 //  display the current texture somehow
 //move command uses Ctrl to only move in one axis
+//camera rotate uses Ctrl to only rotate in one axis
 //add a help button (someplace), or at least some help documentation someplace
-//lots of 3d z-fighting
 //save file completion bar
 //"scale all" totally screwed up on iron man
 //text boxes print floats to only 3 significant digits
-//millenium falcon loaded all black
+//process material params - Ke, Ns, etc.
+//clipping on milennium falcon in the ortho views
+//camera rotate is still bad.  need some help with it.
+//material drop down box has a bar indicating how many items there are
+//selected faces draw their edges red
 
+
+//File a trademark for Avalanche 3D
+//Register avalanche3d.org
+//Build a Wix page
 
 
 import java.util.*;
@@ -332,6 +338,7 @@ void setup() {
 }
 
 void mouseWheel(MouseEvent event) {
+  uiMouseWheel(event);
   for(Window w : windows) {
     w.mouseWheel(event);
   }

@@ -12,6 +12,7 @@ class Window {
   
   PGraphics g;
   Camera c;
+  Vector3f debugPoint = new Vector3f();
   
   Window(int xIn, int yIn, int wIn, int hIn, int viewTypeIn) {
     viewType = viewTypeIn;
@@ -53,8 +54,15 @@ class Window {
       return;
     float e = event.getCount();
     float s = (e > 0.0) ? SCROLL_MULTIPLIER : (1.0f / SCROLL_MULTIPLIER);
+    if(keyPressed && keyCode == SHIFT) {
+      s *= SCROLL_SHIFT_MULTIPLIER;
+    }
     if(viewType == VIEW_3D) {
-      c.moveForward((e == 0.0) ? 0.0 : (e > 0.0 ? 1.0 : -1.0));
+      s = SCROLL_3D_MOVE;
+      if(keyPressed && keyCode == SHIFT) {
+        s *= SCROLL_SHIFT_MULTIPLIER;
+      }
+      c.moveForward((e == 0.0) ? 0.0 : (e > 0.0 ? s : -s));
     } else {
       if (e != 0.0) {
         modelViewMatrix = modelViewMatrix.scale(s, s, s);
@@ -119,16 +127,17 @@ class Window {
             ((dp0 < 0) && (dp1 < 0) && (dp2 < 0)));
   }
   
-  boolean rayIntersectsTriangle(Face f, Vector3f ray, Vector3f eye, Vector3f n) {
+  boolean rayIntersectsTriangle(Face f, Vector3f ray, Vector3f eye, Vector3f n, Vector3f result) {
     float t = ((f.v1.v.x * n.x + f.v1.v.y * n.y + f.v1.v.z * n.z) -
                (eye.x * n.x + eye.y * n.y + eye.z * n.z)) /
                (ray.x * n.x + ray.y * n.y + ray.z * n.z);
     Vector3f q = new Vector3f(eye.x + ray.x * t, eye.y + ray.y * t, eye.z + ray.z * t);
+    result.set(q);
     
     return triangleContainsPointInPlane(f, q, n);
   }  
   
-  boolean rayIntersects(Face f) {
+  boolean rayIntersects(Face f, Vector3f result) {
     Vector3f e1 = new Vector3f(f.v2.v.x  - f.v1.v.x, f.v2.v.y - f.v1.v.y, f.v2.v.z - f.v1.v.z);
     Vector3f e2 = new Vector3f(f.v3.v.x  - f.v2.v.x, f.v3.v.y - f.v2.v.y, f.v3.v.z - f.v2.v.z);
     
@@ -146,7 +155,7 @@ class Window {
           mousePos = modelViewMatrix.transformPosition(mousePos);
           eye.y = mousePos.y;
           eye.z = mousePos.z;
-          return rayIntersectsTriangle(f, ray, eye, n);
+          return rayIntersectsTriangle(f, ray, eye, n, result);
         }
         case VIEW_Y:
         {
@@ -155,7 +164,7 @@ class Window {
           mousePos = modelViewMatrix.transformPosition(mousePos);
           eye.x = mousePos.x;
           eye.z = mousePos.z;
-          return rayIntersectsTriangle(f, ray, eye, n);
+          return rayIntersectsTriangle(f, ray, eye, n, result);
         }
         case VIEW_Z:
         {
@@ -164,14 +173,14 @@ class Window {
           mousePos = modelViewMatrix.transformPosition(mousePos);
           eye.x = mousePos.x;
           eye.y = mousePos.y;
-          return rayIntersectsTriangle(f, ray, eye, n);
+          return rayIntersectsTriangle(f, ray, eye, n, result);
         }
         case VIEW_3D:
         {         
           Vector3f pointOnScreen = unProject(selectMouseStartX, selectMouseStartY);          
           Vector3f ray = new Vector3f(pointOnScreen.x, pointOnScreen.y, pointOnScreen.z);
           ray.normalize();
-          return rayIntersectsTriangle(f, ray, eye, n);
+          return rayIntersectsTriangle(f, ray, eye, n, result);
         }
       }
       return false;
@@ -182,29 +191,44 @@ class Window {
       return;
     if(mode == MODE_SELECT_FACE) {
       if(viewType == VIEW_3D) {
-        g.perspective(PI/3.0, ((float)w) / h, .0001, 100000.0);
+        g.perspective(PI/3.0, ((float)w) / h, .01, 10000.0);
         g.resetMatrix();
         g.applyMatrix(modelViewMatrix.m00(), modelViewMatrix.m10(), modelViewMatrix.m20(), modelViewMatrix.m30(),
           modelViewMatrix.m01(), modelViewMatrix.m11(), modelViewMatrix.m21(), modelViewMatrix.m31(),
           modelViewMatrix.m02(), modelViewMatrix.m12(), modelViewMatrix.m22(), modelViewMatrix.m32(),
           modelViewMatrix.m03(), modelViewMatrix.m13(), modelViewMatrix.m23(), modelViewMatrix.m33());        
       }
+      Vector3f eye = getEyePosition();
+      Face closestIntersection = null;
+      Vector3f result = new Vector3f();
+      float curMinDistance = MAX_FLOAT;
       for(int i = faces.size() - 1; i >= 0; i--) {
         Face f = faces.get(i);
-        if(rayIntersects(f) ||
-           ((keyPressed && keyCode == SHIFT) && f.selected))
-        {
-          if(keyPressed && keyCode == CONTROL) {
-            f.selected = false;
-          } else {
-            f.selected = true;
-          }
-        } else {
-          if(!(keyPressed && keyCode == CONTROL)) {
-            f.selected = false;
+        if(rayIntersects(f, result)) {
+          float d = result.distance(eye);
+          if(d < curMinDistance) {
+            curMinDistance = d;
+            closestIntersection = f;
           }
         }
       }
+      if(keyPressed && keyCode == SHIFT) {
+        if(closestIntersection != null) {
+          closestIntersection.selected = true;
+        }
+      } else if (keyPressed && keyCode == CONTROL) {
+        if(closestIntersection != null) {
+          closestIntersection.selected = false;
+        }
+      } else {
+        for(int i = faces.size() - 1; i >= 0; i--) {
+          Face f = faces.get(i);
+          f.selected = false;
+        }
+        if(closestIntersection != null) {
+          closestIntersection.selected = true;
+        }
+      } 
       updateSelected();
     } else if(mode == MODE_SELECT_VERTEX) {
       selectMouseStartX -= 3;
@@ -213,7 +237,7 @@ class Window {
       selectMouseEndY += 3;
       if(viewType == VIEW_3D) {
         
-      g.perspective(PI/3.0, ((float)w) / h, .0001, 100000.0);
+      g.perspective(PI/3.0, ((float)w) / h, .01, 10000.0);
       g.resetMatrix();
       g.applyMatrix(modelViewMatrix.m00(), modelViewMatrix.m10(), modelViewMatrix.m20(), modelViewMatrix.m30(),
         modelViewMatrix.m01(), modelViewMatrix.m11(), modelViewMatrix.m21(), modelViewMatrix.m31(),
@@ -600,7 +624,7 @@ class Window {
     
     if(selecting && (mode == MODE_SELECT_VERTEX)) {
       if(viewType == VIEW_3D) {
-        g.perspective(PI/3.0, ((float)w) / h, .0001, 100000.0);
+        g.perspective(PI/3.0, ((float)w) / h, .01, 10000.0);
         g.resetMatrix();
         g.applyMatrix(modelViewMatrix.m00(), modelViewMatrix.m10(), modelViewMatrix.m20(), modelViewMatrix.m30(),
           modelViewMatrix.m01(), modelViewMatrix.m11(), modelViewMatrix.m21(), modelViewMatrix.m31(),
@@ -626,7 +650,7 @@ class Window {
       updateSelected();
     } else if(selecting && (mode == MODE_SELECT_FACE)) {
       if(viewType == VIEW_3D) {
-        g.perspective(PI/3.0, ((float)w) / h, .0001, 100000.0);
+        g.perspective(PI/3.0, ((float)w) / h, .01, 10000.0);
         g.resetMatrix();
         g.applyMatrix(modelViewMatrix.m00(), modelViewMatrix.m10(), modelViewMatrix.m20(), modelViewMatrix.m30(),
           modelViewMatrix.m01(), modelViewMatrix.m11(), modelViewMatrix.m21(), modelViewMatrix.m31(),
@@ -669,6 +693,37 @@ class Window {
       c.keyReleased();
       if(key == '`') {
         c.frameModel();
+      }
+    } else {
+      if(key == '`') {
+        Vertex centerOfMass = new Vertex(0.0, 0.0, 0.0);
+        Vertex min = new Vertex(MAX_FLOAT, MAX_FLOAT, MAX_FLOAT);
+        Vertex max = new Vertex(-MAX_FLOAT, -MAX_FLOAT, -MAX_FLOAT);
+        
+        float scale = 1.0;
+        for (int i = 0; i < vertices.size(); i++) {
+            Vertex v = vertices.get(i);
+            centerOfMass.x += v.x * (1.0 / vertices.size());
+            centerOfMass.y += v.y * (1.0 / vertices.size());
+            centerOfMass.z += v.z * (1.0 / vertices.size());
+            min.x = min(min.x, v.x);
+            min.y = min(min.y, v.y);
+            min.z = min(min.z, v.z);
+            max.x = max(max.x, v.x);
+            max.y = max(max.y, v.y);
+            max.z = max(max.z, v.z);
+        }
+        scale = max((max.x - min.x), max(max.y - min.y, max.z - min.z));
+        //scale view to look at this
+        modelViewMatrix = new Matrix4f();
+        modelViewMatrix.scale(VIEW_SCALE * scale * 0.05, VIEW_SCALE * scale * 0.05, VIEW_SCALE * scale * 0.05);
+        if(viewType == VIEW_X) {
+          modelViewMatrix.translate(0.0, centerOfMass.y, centerOfMass.z);
+        } else if(viewType == VIEW_Y) {
+          modelViewMatrix.translate(centerOfMass.x, 0.0, centerOfMass.z);
+        } else if(viewType == VIEW_Z) {
+          modelViewMatrix.translate(centerOfMass.x, centerOfMass.y, 0.0);
+        }  
       }
     }
   }
@@ -761,7 +816,7 @@ class Window {
        0.0, 0.0, 0.0, 
        0.0, -1.0, 0.0);
     } else if(viewType == VIEW_3D) {
-      g.perspective(PI/3.0, ((float)w) / h, .0001, 100000.0);
+      g.perspective(PI/3.0, ((float)w) / h, .01, 10000.0);
       g.resetMatrix();
       g.applyMatrix(modelViewMatrix.m00(), modelViewMatrix.m10(), modelViewMatrix.m20(), modelViewMatrix.m30(),
         modelViewMatrix.m01(), modelViewMatrix.m11(), modelViewMatrix.m21(), modelViewMatrix.m31(),
