@@ -26,8 +26,10 @@
 //scaling performance is bad on large model (don't recalculate center of mass)
 //File a trademark for Avalanche 3D
 //Register avalanche3d.org
-
-//Bonsai tree texture coordinates are wrong
+//full screen 3D mode
+//  different color border
+//  toggle back away from it
+//  don't draw the lines on the screen when in this mode
 
 import java.util.*;
 import org.joml.*;
@@ -43,7 +45,7 @@ Button darkModeCheckbox;
 Vertex centerOfMass;
 Vertex singleSelectedVertex;
 Face singleSelectedFace;
-Button showEdgesCheckbox, showFacesCheckbox, showLightingCheckbox, showNormalsCheckbox, showTexturesCheckbox, selectBackFacingCheckbox;
+Button showEdgesCheckbox, showFacesCheckbox, showLightingCheckbox, showNormalsCheckbox, showTexturesCheckbox, selectBackFacingCheckbox, fullScreenCheckbox;
 UIGroup vertexEditGroup, faceEditGroup, materialEditGroup;
 VectorEditor vEditor;
 VectorEditor n1Editor, n2Editor, n3Editor;
@@ -235,6 +237,21 @@ void settings() {
   PJOGL.setIcon("Avalanche_Icon.png");
 }  
 
+void toggleFullScreen() {
+  if(!fullScreenCheckbox.selected) { //transition to full 3D      
+    int windowWidth = (width - UI_COLUMN_WIDTH) - 5;
+    int windowHeight = height - 5;
+    for(Window w : windows) {
+      if(w.viewType == VIEW_3D) {
+        w.resize(0, 0, windowWidth, windowHeight);
+      } else {
+        w.resize(0, 0, 0, 0);
+      }
+    }
+  } else { //transition away
+  }
+}
+
 void setup() {
   surface.setTitle("Avalanche 3D Modeler");  
   frameRate(30);
@@ -255,6 +272,8 @@ void setup() {
   int uiY = 10; //Starting value
   
   final PApplet myThis = this;
+  fullScreenCheckbox = new Button("3D", "=", true, null, 10, 10, 30, 30, new Thunk() { @Override public void apply() { toggleFullScreen(); } } );
+  
   new Button("Open", "o", false, null,  width - UI_COLUMN_WIDTH + 10, uiY, 100, UI_BUTTON_HEIGHT, new Thunk() { @Override public void apply() { openFile(myThis); } } );
   new Button("Save", "p", false, null,  width - UI_COLUMN_WIDTH + 10 + 110, uiY, 100, UI_BUTTON_HEIGHT, new Thunk() { @Override public void apply() { saveFile(myThis); } } );
   uiY += UI_BUTTON_HEIGHT;
@@ -341,8 +360,7 @@ void setup() {
   uiY += UI_BUTTON_BETWEEN;  
   new Label("MATERIAL", uiY, materialEditGroup);
   uiY += UI_BUTTON_TEXT + UI_BUTTON_TEXT; 
-  ArrayList<String> materialNames = new ArrayList<String>();
-  materialSelector = new DropDownList(materialNames, width - UI_COLUMN_WIDTH + 10, uiY, UI_COLUMN_WIDTH - 40, 25, new Thunk() { @Override public void apply() { updateMaterialChoice(); } }, materialEditGroup);
+  int savedUIY = uiY;
   uiY += UI_BUTTON_HEIGHT + UI_BUTTON_TEXT;
   kaEditor = new VectorEditor("AR", "AG", "AB", true, true, width - UI_COLUMN_WIDTH + 10, uiY, new Thunk() { @Override public void apply() { updateSelectedMaterial(); } }, materialEditGroup);
   uiY += UI_BUTTON_HEIGHT + UI_BUTTON_TEXT;
@@ -350,6 +368,8 @@ void setup() {
   uiY += UI_BUTTON_HEIGHT + UI_BUTTON_TEXT;
   ksEditor = new VectorEditor("SR", "SG", "SB", true, true, width - UI_COLUMN_WIDTH + 10, uiY, new Thunk() { @Override public void apply() { updateSelectedMaterial(); } }, materialEditGroup);
   uiY += UI_BUTTON_HEIGHT + UI_BUTTON_TEXT;
+  ArrayList<String> materialNames = new ArrayList<String>();
+  materialSelector = new DropDownList(materialNames, width - UI_COLUMN_WIDTH + 10, savedUIY, UI_COLUMN_WIDTH - 40, 25, new Thunk() { @Override public void apply() { updateMaterialChoice(); } }, materialEditGroup);
   
   //ColorPicker(int xIn, int yIn, int r, int g, int b, Thunk valueUpdatedIn, UIGroup group) {  
   //colorPicker = new ColorPicker(width - UI_COLUMN_WIDTH - 150, 920, 255, 0, 0, new Thunk() { @Override public void apply() { } }, materialEditGroup);

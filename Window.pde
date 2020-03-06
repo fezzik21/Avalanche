@@ -795,6 +795,9 @@ class Window {
   
   void draw() {  
     
+    if((w <= 0) || (h <= 0)) {
+      return;
+    }
     if(viewType == VIEW_3D) {
       c.update();
     }
@@ -838,7 +841,7 @@ class Window {
         modelViewMatrixInvert.m03(), modelViewMatrixInvert.m13(), modelViewMatrixInvert.m23(), modelViewMatrixInvert.m33());
     }
     
-    /*g.beginShape(LINES);
+    g.beginShape(LINES);
     g.strokeWeight(1.0 * scale.z);
     g.stroke(255, 0, 0);
     g.vertex(0.0, 0.0, 0.0);
@@ -849,7 +852,7 @@ class Window {
     g.stroke(0, 0, 255);
     g.vertex(0.0, 0.0, 0.0);
     g.vertex(0.0, 0.0, 5.0);
-    g.endShape();*/
+    g.endShape();
     
     drawGrid();
     if(!saveNextDraw && showVerticesCheckbox.selected) {
@@ -913,7 +916,7 @@ class Window {
     if(showLightingCheckbox.selected) {
       g.lights();
     }
-    boolean setTexture = true;
+    PImage curTexture = null;
     g.textureMode(NORMAL);
     for(int i = faces.size() - 1; i >= 0; i--) {
       Face f = faces.get(i);
@@ -956,17 +959,24 @@ class Window {
       }
       if(showTexturesCheckbox.selected && f.v1.hasTexture) {
         //println("hasTexture");
-        g.vertex(f.v1.v.x, f.v1.v.y, f.v1.v.z, f.v1.tx, f.v1.ty);
-        if(setTexture) {
-          //println("setTexture");
-          setTexture = false;    
-          if((f.m != null) && (f.m.texture_diffuse != null)) {
+        if((f.m != null) && (curTexture != f.m.texture_diffuse)) {
+          //println("setTexture " + f.m.texture_diffuse);
+          curTexture = f.m.texture_diffuse;    
+          //if((f.m != null) && (f.m.texture_diffuse != null)) {
             //println("setting texture " + f.m.texture_diffuse);
+            g.endShape();
+            g.beginShape(TRIANGLES);
             g.texture(f.m.texture_diffuse);
-          } else {
-            g.texture(null);
-          }
+          //} else {
+          //  g.texture(null);
+          //}
+        } else if ((f.m == null) && (curTexture != null)) {
+          curTexture = null;
+          g.endShape();
+          g.beginShape(TRIANGLES);
+          g.texture(null);
         }
+        g.vertex(f.v1.v.x, f.v1.v.y, f.v1.v.z, f.v1.tx, f.v1.ty);
       } else {
         g.vertex(f.v1.v.x, f.v1.v.y, f.v1.v.z);
       }

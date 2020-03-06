@@ -24,7 +24,7 @@ static final float SCROLL_SHIFT_MULTIPLIER = 10.0;
 
 static final float ROTATE_SPEED = 3.0;
 
-static final float CAMERA_MOVEMENT_SCALE = 0.5;
+static final float CAMERA_MOVEMENT_SCALE = 0.05;
 static final float CAMERA_MOVEMENT_SHIFT_SCALE = 10.0;
 
 static final int UI_COLUMN_WIDTH = 240;

@@ -334,6 +334,9 @@ class DropDownList extends UIElement {
         if(currentTopOptionShown > (options.size() - DROP_DOWN_MAX - 1)) {
           currentTopOptionShown = (options.size() - DROP_DOWN_MAX - 1);
         }
+        if(currentTopOptionShown < 0) {
+          currentTopOptionShown = 0;
+        }
         open = false;
         valueChanged.apply();
       } else if (curMouseWheelEvent != null) { 
@@ -342,6 +345,9 @@ class DropDownList extends UIElement {
           currentTopOptionShown++;
           if(currentTopOptionShown > (options.size() - DROP_DOWN_MAX - 1)) {
             currentTopOptionShown = (options.size() - DROP_DOWN_MAX - 1);
+          }
+          if(currentTopOptionShown < 0) {
+            currentTopOptionShown = 0;
           }
         } else {
           currentTopOptionShown--;
