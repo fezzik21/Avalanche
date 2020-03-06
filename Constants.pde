@@ -19,20 +19,24 @@ static final float VIEW_SCALE = 0.1;
 static final float STARTING_SCALE = 5.0;
 
 static final float SCROLL_MULTIPLIER = 1.05;
-static final float SCROLL_3D_MOVE = 5.0;
+static final float SCROLL_3D_MOVE = 0.2;
 static final float SCROLL_SHIFT_MULTIPLIER = 10.0;
 
 static final float ROTATE_SPEED = 3.0;
 
-static final float CAMERA_MOVEMENT_SCALE = 2.0;
+static final float CAMERA_MOVEMENT_SCALE = 0.5;
 static final float CAMERA_MOVEMENT_SHIFT_SCALE = 10.0;
 
 static final int UI_COLUMN_WIDTH = 240;
 static final int UI_BAR_HEIGHT = 50;
 
 
-static final float PAN_SPEED_3D = 0.2;
+static final float PAN_SPEED_3D = 0.002;
 
 static final float GEOM_SCALING_FACTOR = 1.001;
 
 static final int DROP_DOWN_MAX = 4;
+
+static final int UI_BUTTON_HEIGHT = 25;
+static final int UI_BUTTON_BETWEEN = 7;
+static final int UI_BUTTON_TEXT = 15;

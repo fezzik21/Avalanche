@@ -1,4 +1,6 @@
 
+import java.text.DecimalFormat;
+
 ArrayList<UIElement> elements = new ArrayList<UIElement>();
 boolean isMousePressed = false;
 boolean isKeyPressed = false;
@@ -6,6 +8,13 @@ boolean wasMousePressed = false;
 boolean wasKeyPressed = false;
 MouseEvent uiLastMouseWheelEvent = null;
 MouseEvent curMouseWheelEvent = null;
+
+static final DecimalFormat df = new DecimalFormat("0.####");
+
+String floatToString(float f) {
+  //return String.format("%.04f", f);
+  return df.format(f);
+}
 
 void uiMouseWheel(MouseEvent event) {
   uiLastMouseWheelEvent = event;
@@ -242,7 +251,7 @@ class VectorEditor extends UIGroup {
       z = new TextBox("", t3, xStart + 73 + 73, yStart, 63, 25, thunkIn, this );
     }
     if(useColorPickerIn) { 
-      cp = new ColorPicker(xStart - 150, yStart, 255, 0, 0, new Thunk() { @Override public void apply() { x.t = String.valueOf(cp.r / 255.0); y.t = String.valueOf(cp.g / 255.0); z.t = String.valueOf(cp.b / 255.0); thunk.apply(); } }, this);
+      cp = new ColorPicker(xStart - 150, yStart, 255, 0, 0, new Thunk() { @Override public void apply() { x.t = floatToString(cp.r / 255.0); y.t = floatToString(cp.g / 255.0); z.t = floatToString(cp.b / 255.0); thunk.apply(); } }, this);
       cp.visible = false;
     }
   }
@@ -273,10 +282,10 @@ class VectorEditor extends UIGroup {
   }
   
   void updateText(Vector3f v) {
-    x.t = String.valueOf(v.x);
-    y.t = String.valueOf(v.y);
+    x.t = floatToString(v.x);
+    y.t = floatToString(v.y);
     if(z != null) {
-      z.t = String.valueOf(v.z);
+      z.t = floatToString(v.z);
     }
   }
   

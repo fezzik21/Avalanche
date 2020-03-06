@@ -50,7 +50,7 @@ class Camera {
           
         w.selectMouseStartX = w.selectMouseEndX;
         w.selectMouseStartY = w.selectMouseEndY;
-        w.debugPoint = eye;
+        //w.debugPoint = eye;
       } else {
         Matrix4f modelViewMatrixInvert = new Matrix4f(w.modelViewMatrix).invert();
         Vector3f up = new Vector3f();

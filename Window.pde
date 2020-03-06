@@ -13,6 +13,8 @@ class Window {
   PGraphics g;
   Camera c;
   Vector3f debugPoint = new Vector3f();
+  Vector3f debugRayStart = new Vector3f();
+  Vector3f debugRay = new Vector3f();
   
   Window(int xIn, int yIn, int wIn, int hIn, int viewTypeIn) {
     viewType = viewTypeIn;
@@ -125,27 +127,21 @@ class Window {
     float dp2 = n.dot(cp2);
     return (((dp0 > 0) && (dp1 > 0) && (dp2 > 0)) ||
             ((dp0 < 0) && (dp1 < 0) && (dp2 < 0)));
-  }
+  }  
   
   boolean rayIntersectsTriangle(Face f, Vector3f ray, Vector3f eye, Vector3f n, Vector3f result) {
     float t = ((f.v1.v.x * n.x + f.v1.v.y * n.y + f.v1.v.z * n.z) -
                (eye.x * n.x + eye.y * n.y + eye.z * n.z)) /
                (ray.x * n.x + ray.y * n.y + ray.z * n.z);
     Vector3f q = new Vector3f(eye.x + ray.x * t, eye.y + ray.y * t, eye.z + ray.z * t);
-    result.set(q);
-    
-    return triangleContainsPointInPlane(f, q, n);
+    result.set(q);    
+    debugPoint = q;
+    boolean r = triangleContainsPointInPlane(f, q, n);
+    return r;
   }  
   
   boolean rayIntersects(Face f, Vector3f result) {
-    Vector3f e1 = new Vector3f(f.v2.v.x  - f.v1.v.x, f.v2.v.y - f.v1.v.y, f.v2.v.z - f.v1.v.z);
-    Vector3f e2 = new Vector3f(f.v3.v.x  - f.v2.v.x, f.v3.v.y - f.v2.v.y, f.v3.v.z - f.v2.v.z);
-    
-    Vector3f n = new Vector3f(e1.y * e2.z - e1.z * e2.y,
-                              e1.z * e2.x - e1.x * e2.z,
-                              e1.y * e2.x - e1.x * e2.y);
-    n.normalize();
-          
+    Vector3f n = faceNormal(f);          
     Vector3f eye = getEyePosition();
     switch(viewType) {
         case VIEW_X:   
@@ -566,6 +562,16 @@ class Window {
       }
       case VIEW_3D:
       { 
+        if(!selectBackFacingCheckbox.selected) {
+          Vector3f n = faceNormal(f);          
+          Vector3f pointOnScreen = unProject(selectMouseStartX, selectMouseStartY);          
+          Vector3f ray = new Vector3f(pointOnScreen.x, pointOnScreen.y, pointOnScreen.z);
+          ray.normalize();
+          println("v = " + (ray.x * n.x + ray.y * n.y + ray.z * n.z));
+          if((ray.x * n.x + ray.y * n.y + ray.z * n.z) > 0) {
+            return false;
+          }
+        }
         float vX1 = g.screenX(f.v1.v.x, f.v1.v.y, f.v1.v.z) - w/2;
         float vY1 = g.screenY(f.v1.v.x, f.v1.v.y, f.v1.v.z) - h/2;
         float vX2 = g.screenX(f.v2.v.x, f.v2.v.y, f.v2.v.z) - w/2;
@@ -832,7 +838,7 @@ class Window {
         modelViewMatrixInvert.m03(), modelViewMatrixInvert.m13(), modelViewMatrixInvert.m23(), modelViewMatrixInvert.m33());
     }
     
-    g.beginShape(LINES);
+    /*g.beginShape(LINES);
     g.strokeWeight(1.0 * scale.z);
     g.stroke(255, 0, 0);
     g.vertex(0.0, 0.0, 0.0);
@@ -843,7 +849,7 @@ class Window {
     g.stroke(0, 0, 255);
     g.vertex(0.0, 0.0, 0.0);
     g.vertex(0.0, 0.0, 5.0);
-    g.endShape();
+    g.endShape();*/
     
     drawGrid();
     if(!saveNextDraw && showVerticesCheckbox.selected) {
@@ -867,11 +873,20 @@ class Window {
         }
         g.vertex(v.x, v.y, v.z);
       }
-      
-      //g.fill(0, 255, 0);
-      //g.stroke(0, 255, 0);
-      //g.vertex(debugPoint.x, debugPoint.y, debugPoint.z);
       g.endShape();
+      
+      /*
+      g.beginShape(POINTS);
+      g.fill(0, 255, 0);
+      g.stroke(0, 255, 0);
+      g.vertex(debugPoint.x, debugPoint.y, debugPoint.z);
+      g.endShape();
+      
+      g.beginShape(LINES);      
+      g.vertex(debugRayStart.x, debugRayStart.y, debugRayStart.z);
+      g.vertex(debugRayStart.x + debugRay.x, debugRayStart.y + debugRay.y, debugRayStart.z + debugRay.z);
+      g.stroke(0, 255, 0);
+      g.endShape();*/
     }    
     
     
@@ -889,11 +904,11 @@ class Window {
     } else {
       g.noStroke();
     }
-    if(showFacesCheckbox.selected) {
+    /*if(showFacesCheckbox.selected) {
       g.fill(128, 128, 128);
     } else {
       g.noFill();
-    }
+    }*/
     g.beginShape(TRIANGLES);
     if(showLightingCheckbox.selected) {
       g.lights();
@@ -915,6 +930,18 @@ class Window {
         g.ambient(255 * f.m.Ka.x, 255 * f.m.Ka.y, 255 * f.m.Ka.z);
         g.fill(255 * f.m.Kd.x, 255 * f.m.Kd.y, 255 * f.m.Kd.z);
         g.specular(255 * f.m.Ks.x, 255 * f.m.Ks.y, 255 * f.m.Ks.z);
+      }
+      if(showEdgesCheckbox.selected) {
+        g.strokeWeight(1.0 * scale.z);
+        if(f.selected) {
+          g.stroke(255, 0, 0);
+        } else if(darkModeCheckbox.selected) {
+          g.stroke(255, 255, 255);
+        } else {
+          g.stroke(0, 0, 0);
+        }
+      } else {
+        g.noStroke();
       }
       if(f.selected) {
         g.fill(255, 0, 0);
