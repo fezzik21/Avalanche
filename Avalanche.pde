@@ -1,6 +1,4 @@
 //text box scroll contents
-//Create a gmail account 
-//Create bug tracking on the github
 
 //undo adding a vertex
 //undo adding a face
@@ -46,6 +44,7 @@ Vertex centerOfMass;
 Vertex singleSelectedVertex;
 Face singleSelectedFace;
 Button showEdgesCheckbox, showFacesCheckbox, showLightingCheckbox, showNormalsCheckbox, showTexturesCheckbox, selectBackFacingCheckbox, fullScreenCheckbox;
+UIImage materialDiffuseImage;
 UIGroup vertexEditGroup, faceEditGroup, materialEditGroup;
 VectorEditor vEditor;
 VectorEditor n1Editor, n2Editor, n3Editor;
@@ -119,6 +118,7 @@ void updateSelected() {
         kaEditor.updateText(f.m.Ka);
         kdEditor.updateText(f.m.Kd);
         ksEditor.updateText(f.m.Ks);
+        materialDiffuseImage.image = f.m.texture_diffuse;
       }
     }
   }
@@ -371,6 +371,7 @@ void setup() {
   ArrayList<String> materialNames = new ArrayList<String>();
   materialSelector = new DropDownList(materialNames, width - UI_COLUMN_WIDTH + 10, savedUIY, UI_COLUMN_WIDTH - 40, 25, new Thunk() { @Override public void apply() { updateMaterialChoice(); } }, materialEditGroup);
   
+  materialDiffuseImage = new UIImage(width - UI_COLUMN_WIDTH + 10, uiY, 30, 30, materialEditGroup);
   //ColorPicker(int xIn, int yIn, int r, int g, int b, Thunk valueUpdatedIn, UIGroup group) {  
   //colorPicker = new ColorPicker(width - UI_COLUMN_WIDTH - 150, 920, 255, 0, 0, new Thunk() { @Override public void apply() { } }, materialEditGroup);
   

@@ -298,6 +298,26 @@ class VectorEditor extends UIGroup {
   }
 }
 
+class UIImage extends UIElement {
+  int w, h;
+  PImage image;
+  
+  UIImage(int xIn, int yIn, int wIn, int hIn, UIGroup group) {
+    super(group);
+    x = xIn; y = yIn;
+    w = wIn;
+    h = hIn;
+  }
+  
+  void draw() {
+    fill(228, 228, 228);
+    rect(x - 2, y - 2, w + 4, h + 4);
+    if(image != null) {
+      image(image, x, y, w, h);
+    }
+  }
+}
+
 class DropDownList extends UIElement {
   int w, h;
   ArrayList<String> options;
