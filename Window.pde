@@ -267,7 +267,9 @@ class Window {
             mousePos.y = round(mousePos.y / STARTING_SCALE) * STARTING_SCALE;
             mousePos.z = round(mousePos.z / STARTING_SCALE) * STARTING_SCALE;
           }
-          vertices.add(new Vertex(0.0, mousePos.y, mousePos.z));
+          Vertex newVertex = new Vertex(0.0, mousePos.y, mousePos.z);
+          vertices.add(newVertex);
+          new UndoVertexAddition(newVertex);
         }
         break;
         case VIEW_Y:
@@ -278,7 +280,9 @@ class Window {
             mousePos.x = round(mousePos.x / STARTING_SCALE) * STARTING_SCALE;
             mousePos.z = round(mousePos.z / STARTING_SCALE) * STARTING_SCALE;
           }
-          vertices.add(new Vertex(mousePos.x, 0.0, mousePos.z));
+          Vertex newVertex = new Vertex(mousePos.x, 0.0, mousePos.z);
+          vertices.add(newVertex);
+          new UndoVertexAddition(newVertex);
         }
         break;
         case VIEW_Z:
@@ -289,7 +293,9 @@ class Window {
             mousePos.x = round(mousePos.x / STARTING_SCALE) * STARTING_SCALE;
             mousePos.y = round(mousePos.y / STARTING_SCALE) * STARTING_SCALE;
           }
-          vertices.add(new Vertex(mousePos.x, mousePos.y, 0.0));
+          Vertex newVertex = new Vertex(mousePos.x, mousePos.y, 0.0);
+          vertices.add(newVertex);
+          new UndoVertexAddition(newVertex);
         }
         break;
         case VIEW_3D:

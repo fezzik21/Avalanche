@@ -42,3 +42,29 @@ class UndoRecordDeletion extends UndoRecord {
     }
   }
 }
+
+class UndoFaceAddition extends UndoRecord {
+  Face addedFace;
+  
+  UndoFaceAddition(Face f) {
+    super();
+    addedFace = f;
+  }
+  
+  void undo() {
+    faces.remove(addedFace);
+  }
+}
+
+class UndoVertexAddition extends UndoRecord {
+  Vertex addedVertex;
+  
+  UndoVertexAddition(Vertex v) {
+    super();
+    addedVertex = v;
+  }
+  
+  void undo() {
+    vertices.remove(addedVertex);
+  }
+}

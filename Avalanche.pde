@@ -1,7 +1,4 @@
 //text box scroll contents
-
-//undo adding a vertex
-//undo adding a face
 //undo moving a vertex
 //continue to implement FBX loader
 //allow graphical editing of normals
@@ -22,7 +19,7 @@
 //camera rotate is still bad.  need some help with it.
 //material drop down box has a bar indicating how many items there are
 //scaling performance is bad on large model (don't recalculate center of mass)
-//File a trademark for Avalanche 3D
+//File a trademark for Avalanche 3D (costs about $300, https://guides.wsj.com/small-business/starting-a-business/how-to-trademark-a-company-name/)
 //Register avalanche3d.org
 
 import java.util.*;
@@ -526,12 +523,15 @@ void addFace() {
     //See if the face already exists
     for (int i = faces.size()-1; i >= 0; i--) {
       Face f = faces.get(i);
-      if(selected.contains(f.v1) && selected.contains(f.v2) && selected.contains(f.v3)) {
+      if(selected.contains(f.v1.v) && selected.contains(f.v2.v) && selected.contains(f.v3.v)) {
+        new UndoRecordDeletion().addFace(f);
         faces.remove(f);
         return;
       }
     }
-    faces.add(new Face(selected.get(0), selected.get(1), selected.get(2)));
+    Face newFace = new Face(selected.get(0), selected.get(1), selected.get(2));
+    new UndoFaceAddition(newFace);
+    faces.add(newFace);
   }
 }
 
