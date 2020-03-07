@@ -26,10 +26,6 @@
 //scaling performance is bad on large model (don't recalculate center of mass)
 //File a trademark for Avalanche 3D
 //Register avalanche3d.org
-//full screen 3D mode
-//  different color border
-//  toggle back away from it
-//  don't draw the lines on the screen when in this mode
 
 import java.util.*;
 import org.joml.*;
@@ -249,6 +245,12 @@ void toggleFullScreen() {
       }
     }
   } else { //transition away
+  int windowWidth = (width - UI_COLUMN_WIDTH) / 2 - 5;
+    int windowHeight = height / 2 - 5;
+    windows.get(0).resize(0, 0, windowWidth, windowHeight);
+    windows.get(1).resize(windowWidth + 5, 0, windowWidth, windowHeight);
+    windows.get(2).resize(0, windowHeight + 5, windowWidth, windowHeight);
+    windows.get(3).resize(windowWidth + 5, windowHeight + 5, windowWidth, windowHeight);           
   }
 }
 
@@ -272,7 +274,6 @@ void setup() {
   int uiY = 10; //Starting value
   
   final PApplet myThis = this;
-  fullScreenCheckbox = new Button("3D", "=", true, null, 10, 10, 30, 30, new Thunk() { @Override public void apply() { toggleFullScreen(); } } );
   
   new Button("Open", "o", false, null,  width - UI_COLUMN_WIDTH + 10, uiY, 100, UI_BUTTON_HEIGHT, new Thunk() { @Override public void apply() { openFile(myThis); } } );
   new Button("Save", "p", false, null,  width - UI_COLUMN_WIDTH + 10 + 110, uiY, 100, UI_BUTTON_HEIGHT, new Thunk() { @Override public void apply() { saveFile(myThis); } } );
@@ -301,6 +302,8 @@ void setup() {
   darkModeCheckbox.selected = true;
   selectBackFacingCheckbox = new Button("Back Facing", "o", true, null,  width - UI_COLUMN_WIDTH + 10 + 110, uiY, 100, UI_BUTTON_HEIGHT, new Thunk() { @Override public void apply() { } } );
   selectBackFacingCheckbox.selected = true;  
+  uiY += UI_BUTTON_HEIGHT + UI_BUTTON_BETWEEN;
+  fullScreenCheckbox = new Button("3D Only", "=", true, null, width - UI_COLUMN_WIDTH + 10, uiY, 100, UI_BUTTON_HEIGHT, new Thunk() { @Override public void apply() { toggleFullScreen(); } } );
   uiY += UI_BUTTON_HEIGHT + UI_BUTTON_BETWEEN;
   
   new Line(uiY, null);
@@ -548,8 +551,10 @@ void draw() {
   } else {
     stroke(64, 64, 128);
   }
-  line(0, height / 2, width - UI_COLUMN_WIDTH, height / 2);
-  line((width - UI_COLUMN_WIDTH) / 2, 0, (width - UI_COLUMN_WIDTH) / 2, height);
+  if(!fullScreenCheckbox.selected) {
+    line(0, height / 2, width - UI_COLUMN_WIDTH, height / 2);
+    line((width - UI_COLUMN_WIDTH) / 2, 0, (width - UI_COLUMN_WIDTH) / 2, height);
+  }
   
   drawUI();
   //saveFrame("test-######.tif");
