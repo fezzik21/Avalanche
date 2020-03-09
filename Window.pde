@@ -10,6 +10,8 @@ class Window {
   
   Matrix4f modelViewMatrix;
   
+  UndoVertexMovement currentUvm = null;
+  
   PGraphics g;
   Camera c;
   Vector3f debugPoint = new Vector3f();
@@ -369,9 +371,17 @@ class Window {
       selectMouseStartY = selectMouseEndY;
       selecting = false;
     } else if(mode == MODE_MOVE) {
+      boolean needsAdding = (currentUvm == null);
+      if(needsAdding) {
+        println("Adding UVM");
+        currentUvm = new UndoVertexMovement();
+      }
       for (int i = vertices.size()-1; i >= 0; i--) {
         Vertex v = vertices.get(i);
         if(v.selected) {
+          if(needsAdding) {
+            currentUvm.addVertex(v);
+          }
           switch(viewType) {
             case VIEW_X:
             { 
@@ -631,6 +641,7 @@ class Window {
   }
   
   void mouseReleased() {
+    currentUvm = null;
     if(!processMousePosition())
       return;
     

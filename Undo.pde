@@ -68,3 +68,33 @@ class UndoVertexAddition extends UndoRecord {
     vertices.remove(addedVertex);
   }
 }
+
+class UndoVertexMovementRecord {
+  Vertex v;
+  Vector3f pos;
+}
+
+class UndoVertexMovement extends UndoRecord {
+  ArrayList<UndoVertexMovementRecord> movedVertices;
+  
+  UndoVertexMovement() {
+    super();
+    movedVertices = new ArrayList<UndoVertexMovementRecord>();
+  }
+  
+  void addVertex(Vertex v) {
+    UndoVertexMovementRecord uvmr = new UndoVertexMovementRecord();
+    uvmr.v = v;
+    uvmr.pos = new Vector3f(v.x, v.y, v.z);
+    movedVertices.add(uvmr);
+  }
+  
+  void undo() {
+    for(UndoVertexMovementRecord uvmr : movedVertices) {
+      println("undo " + uvmr.v.x + " , " + uvmr.pos.x);
+      uvmr.v.x = uvmr.pos.x;
+      uvmr.v.y = uvmr.pos.y;
+      uvmr.v.z = uvmr.pos.z;      
+    }
+  }
+}
