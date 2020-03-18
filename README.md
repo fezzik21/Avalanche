@@ -1,5 +1,5 @@
-# Armas
-Armas is a 3D modeler built using Processing [http://www.processing.org].
+# Avalanche
+Avalancheis a 3D modeler built using Processing [http://www.processing.org].
 
 # Design Goals
 
