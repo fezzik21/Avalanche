@@ -1,5 +1,4 @@
 //text box scroll contents
-//undo moving a vertex
 //continue to implement FBX loader
 //allow graphical editing of normals
 //Allow for a simple "computational framework" (QScript)
@@ -20,7 +19,10 @@
 //material drop down box has a bar indicating how many items there are
 //scaling performance is bad on large model (don't recalculate center of mass)
 //File a trademark for Avalanche 3D (costs about $300, https://guides.wsj.com/small-business/starting-a-business/how-to-trademark-a-company-name/)
-//Register avalanche3d.org
+//Adding a material to a triangle that doesn't have it
+//editing material on a group of faces
+//adding a material when there are no materials to add
+
 
 import java.util.*;
 import org.joml.*;
@@ -38,7 +40,7 @@ Vertex singleSelectedVertex;
 Face singleSelectedFace;
 Button showEdgesCheckbox, showFacesCheckbox, showLightingCheckbox, showNormalsCheckbox, showTexturesCheckbox, selectBackFacingCheckbox, fullScreenCheckbox;
 UIImage materialDiffuseImage;
-UIGroup vertexEditGroup, faceEditGroup, materialEditGroup;
+UIGroup vertexEditGroup, faceEditGroup, materialEditGroup, newMaterialGroup;
 VectorEditor vEditor;
 VectorEditor n1Editor, n2Editor, n3Editor;
 VectorEditor t1Editor, t2Editor, t3Editor;
@@ -121,32 +123,49 @@ void updateSelected() {
   vertexEditGroup.setVisible(false);
   faceEditGroup.setVisible(false);
   materialEditGroup.setVisible(false);
+  newMaterialGroup.setVisible(false);
   if(selected.size() == 1) {
     singleSelectedVertex = selected.get(0);
     vertexEditGroup.setVisible(true);
   }
-  if(selectedFaces.size() == 1) {
+  boolean allSelectedFacesHaveNoMaterial = true;
+  boolean allSelectedFacesHaveSameMaterial = true;
+  Material jointMaterial = null;
+  if(selectedFaces.size() == 0) {
+    allSelectedFacesHaveNoMaterial = false;
+    allSelectedFacesHaveSameMaterial = false;
+  } else {
     singleSelectedFace = selectedFaces.get(0);
+    for(Face f: selectedFaces) {
+      if(f.m != null) {
+        allSelectedFacesHaveNoMaterial = false;
+        if(jointMaterial == null) {
+          jointMaterial = f.m;
+        } else if (jointMaterial != f.m) {
+          allSelectedFacesHaveSameMaterial = false;
+        }
+      } else {
+        allSelectedFacesHaveSameMaterial = false;
+      }
+    }
+  }
+  if(allSelectedFacesHaveNoMaterial) {
+    newMaterialGroup.setVisible(true);
+  } else if(allSelectedFacesHaveSameMaterial) {
     if(singleSelectedFace.m != null) {
       materialEditGroup.setVisible(true);
       materialSelector.selectedOption = materialSelector.options.indexOf(singleSelectedFace.m.name);
     }
+  }
+  if(selectedFaces.size() == 1) {
     if(singleSelectedFace.v1.hasNormal) {
       n1Editor.setVisible(true);
+      n2Editor.setVisible(true);
+      n3Editor.setVisible(true);
     }
     if(singleSelectedFace.v1.hasTexture) {
       t1Editor.setVisible(true);
-    }
-    if(singleSelectedFace.v2.hasNormal) {
-      n2Editor.setVisible(true);
-    }
-    if(singleSelectedFace.v2.hasTexture) {
       t2Editor.setVisible(true);
-    }
-    if(singleSelectedFace.v3.hasNormal) {
-      n3Editor.setVisible(true);
-    }
-    if(singleSelectedFace.v3.hasTexture) {
       t3Editor.setVisible(true);
     }
   }
@@ -162,9 +181,10 @@ void updateSelectedVertexPosition() {
 }
 
 void updateMaterialChoice() {
-  Face f = singleSelectedFace;
-  if(f.selected) {
-    f.m = materials.get(materialSelector.options.get(materialSelector.selectedOption));
+  for(Face f: faces) {
+    if(f.selected) {
+      f.m = materials.get(materialSelector.options.get(materialSelector.selectedOption));
+    }
   }
 }
 
@@ -251,6 +271,9 @@ void toggleFullScreen() {
   }
 }
 
+void addMaterial() {
+}
+
 void setup() {
   surface.setTitle("Avalanche 3D Modeler");  
   frameRate(30);
@@ -272,35 +295,35 @@ void setup() {
   
   final PApplet myThis = this;
   
-  new Button("Open", "o", false, null,  width - UI_COLUMN_WIDTH + 10, uiY, 100, UI_BUTTON_HEIGHT, new Thunk() { @Override public void apply() { openFile(myThis); } } );
-  new Button("Save", "p", false, null,  width - UI_COLUMN_WIDTH + 10 + 110, uiY, 100, UI_BUTTON_HEIGHT, new Thunk() { @Override public void apply() { saveFile(myThis); } } );
+  new Button("Open", "o", false, null,  width - UI_COLUMN_WIDTH + 10, uiY, 100, UI_BUTTON_HEIGHT, new Thunk() { @Override public void apply() { openFile(myThis); } }, null );
+  new Button("Save", "p", false, null,  width - UI_COLUMN_WIDTH + 10 + 110, uiY, 100, UI_BUTTON_HEIGHT, new Thunk() { @Override public void apply() { saveFile(myThis); } }, null );
   uiY += UI_BUTTON_HEIGHT;
   uiY += UI_BUTTON_BETWEEN;
   new Line(uiY, null);
   uiY += UI_BUTTON_BETWEEN;
-  new Button("Place", "1", false, "Mode",  width - UI_COLUMN_WIDTH + 10, uiY, 100, UI_BUTTON_HEIGHT, new Thunk() { @Override public void apply() { mode = MODE_PLACE; } } ).selected = true;
-  new Button("Select Vertex", "2", false, "Mode",  width - UI_COLUMN_WIDTH + 10 + 110, uiY, 100, UI_BUTTON_HEIGHT, new Thunk() { @Override public void apply() { clearSelected(); mode = MODE_SELECT_VERTEX; } } );
+  new Button("Place", "1", false, "Mode",  width - UI_COLUMN_WIDTH + 10, uiY, 100, UI_BUTTON_HEIGHT, new Thunk() { @Override public void apply() { mode = MODE_PLACE; } }, null ).selected = true;
+  new Button("Select Vertex", "2", false, "Mode",  width - UI_COLUMN_WIDTH + 10 + 110, uiY, 100, UI_BUTTON_HEIGHT, new Thunk() { @Override public void apply() { clearSelected(); mode = MODE_SELECT_VERTEX; } }, null );
   uiY += UI_BUTTON_HEIGHT + UI_BUTTON_BETWEEN;
-  new Button("Select Face", "3", false, "Mode",  width - UI_COLUMN_WIDTH + 10, uiY, 100, UI_BUTTON_HEIGHT, new Thunk() { @Override public void apply() { clearSelected(); mode = MODE_SELECT_FACE; } } );
-  new Button("Move", "4", false, "Mode",  width - UI_COLUMN_WIDTH + 10 + 110, uiY, 100, UI_BUTTON_HEIGHT, new Thunk() { @Override public void apply() { mode = MODE_MOVE; } } );
+  new Button("Select Face", "3", false, "Mode",  width - UI_COLUMN_WIDTH + 10, uiY, 100, UI_BUTTON_HEIGHT, new Thunk() { @Override public void apply() { clearSelected(); mode = MODE_SELECT_FACE; } }, null );
+  new Button("Move", "4", false, "Mode",  width - UI_COLUMN_WIDTH + 10 + 110, uiY, 100, UI_BUTTON_HEIGHT, new Thunk() { @Override public void apply() { mode = MODE_MOVE; } }, null );
   uiY += UI_BUTTON_HEIGHT + UI_BUTTON_BETWEEN;
-  new Button("Scale (All)", "5", false, "Mode",  width - UI_COLUMN_WIDTH + 10, uiY, 100, UI_BUTTON_HEIGHT, new Thunk() { @Override public void apply() { mode = MODE_SCALE_ALL; } } );
-  new Button("Scale", "6", false, "Mode",  width - UI_COLUMN_WIDTH + 10 + 110, uiY, 100, UI_BUTTON_HEIGHT, new Thunk() { @Override public void apply() { mode = MODE_SCALE; } } );
+  new Button("Scale (All)", "5", false, "Mode",  width - UI_COLUMN_WIDTH + 10, uiY, 100, UI_BUTTON_HEIGHT, new Thunk() { @Override public void apply() { mode = MODE_SCALE_ALL; } }, null );
+  new Button("Scale", "6", false, "Mode",  width - UI_COLUMN_WIDTH + 10 + 110, uiY, 100, UI_BUTTON_HEIGHT, new Thunk() { @Override public void apply() { mode = MODE_SCALE; } }, null );
   uiY += UI_BUTTON_HEIGHT + UI_BUTTON_BETWEEN;
-  new Button("Rotate", "7", false, "Mode",  width - UI_COLUMN_WIDTH + 10, uiY, 100, UI_BUTTON_HEIGHT, new Thunk() { @Override public void apply() { mode = MODE_ROTATE; } } );
+  new Button("Rotate", "7", false, "Mode",  width - UI_COLUMN_WIDTH + 10, uiY, 100, UI_BUTTON_HEIGHT, new Thunk() { @Override public void apply() { mode = MODE_ROTATE; } }, null );
   uiY += UI_BUTTON_HEIGHT + UI_BUTTON_BETWEEN;
   new Line(uiY, null);
   uiY += UI_BUTTON_BETWEEN;  
-  snapToGridCheckbox = new Button("Snap To Grid", "g", true, null,  width - UI_COLUMN_WIDTH + 10, uiY, 100, UI_BUTTON_HEIGHT, new Thunk() { @Override public void apply() { } } );
-  centerOfMassCheckbox = new Button("Center of Mass", "h", true, null,  width - UI_COLUMN_WIDTH + 10 + 110, uiY, 100, UI_BUTTON_HEIGHT, new Thunk() { @Override public void apply() { } } );
+  snapToGridCheckbox = new Button("Snap To Grid", "g", true, null,  width - UI_COLUMN_WIDTH + 10, uiY, 100, UI_BUTTON_HEIGHT, new Thunk() { @Override public void apply() { } }, null );
+  centerOfMassCheckbox = new Button("Center of Mass", "h", true, null,  width - UI_COLUMN_WIDTH + 10 + 110, uiY, 100, UI_BUTTON_HEIGHT, new Thunk() { @Override public void apply() { } }, null );
   centerOfMassCheckbox.selected = true;
   uiY += UI_BUTTON_HEIGHT + UI_BUTTON_BETWEEN;
-  darkModeCheckbox = new Button("Dark Mode", "i", true, null,  width - UI_COLUMN_WIDTH + 10, uiY, 100, UI_BUTTON_HEIGHT, new Thunk() { @Override public void apply() { } } );
+  darkModeCheckbox = new Button("Dark Mode", "i", true, null,  width - UI_COLUMN_WIDTH + 10, uiY, 100, UI_BUTTON_HEIGHT, new Thunk() { @Override public void apply() { } }, null );
   darkModeCheckbox.selected = true;
-  selectBackFacingCheckbox = new Button("Back Facing", "o", true, null,  width - UI_COLUMN_WIDTH + 10 + 110, uiY, 100, UI_BUTTON_HEIGHT, new Thunk() { @Override public void apply() { } } );
+  selectBackFacingCheckbox = new Button("Back Facing", "o", true, null,  width - UI_COLUMN_WIDTH + 10 + 110, uiY, 100, UI_BUTTON_HEIGHT, new Thunk() { @Override public void apply() { } }, null );
   selectBackFacingCheckbox.selected = true;  
   uiY += UI_BUTTON_HEIGHT + UI_BUTTON_BETWEEN;
-  fullScreenCheckbox = new Button("3D Only", "=", true, null, width - UI_COLUMN_WIDTH + 10, uiY, 100, UI_BUTTON_HEIGHT, new Thunk() { @Override public void apply() { toggleFullScreen(); } } );
+  fullScreenCheckbox = new Button("3D Only", "=", true, null, width - UI_COLUMN_WIDTH + 10, uiY, 100, UI_BUTTON_HEIGHT, new Thunk() { @Override public void apply() { toggleFullScreen(); } }, null );
   uiY += UI_BUTTON_HEIGHT + UI_BUTTON_BETWEEN;
   
   new Line(uiY, null);
@@ -308,36 +331,37 @@ void setup() {
   new Label("SHOW", uiY, null);
   uiY += UI_BUTTON_TEXT;  
   
-  showVerticesCheckbox = new Button("Vertices", "z", true, null,  width - UI_COLUMN_WIDTH + 10, uiY, 100, UI_BUTTON_HEIGHT, new Thunk() { @Override public void apply() { } } );
+  showVerticesCheckbox = new Button("Vertices", "z", true, null,  width - UI_COLUMN_WIDTH + 10, uiY, 100, UI_BUTTON_HEIGHT, new Thunk() { @Override public void apply() { } }, null );
   showVerticesCheckbox.selected = true;
-  showEdgesCheckbox = new Button("Edges", "x", true, null,  width - UI_COLUMN_WIDTH + 10 + 110, uiY, 100, UI_BUTTON_HEIGHT, new Thunk() { @Override public void apply() { } } );
+  showEdgesCheckbox = new Button("Edges", "x", true, null,  width - UI_COLUMN_WIDTH + 10 + 110, uiY, 100, UI_BUTTON_HEIGHT, new Thunk() { @Override public void apply() { } }, null );
   showEdgesCheckbox.selected = true;
   uiY += UI_BUTTON_HEIGHT + UI_BUTTON_BETWEEN;
-  showFacesCheckbox = new Button("Faces", "c", true, null,  width - UI_COLUMN_WIDTH + 10, uiY, 100, UI_BUTTON_HEIGHT, new Thunk() { @Override public void apply() { } } );
+  showFacesCheckbox = new Button("Faces", "c", true, null,  width - UI_COLUMN_WIDTH + 10, uiY, 100, UI_BUTTON_HEIGHT, new Thunk() { @Override public void apply() { } }, null );
   showFacesCheckbox.selected = true;
-  showLightingCheckbox = new Button("Light", "v", true, null,  width - UI_COLUMN_WIDTH + 10 + 110, uiY, 100, UI_BUTTON_HEIGHT, new Thunk() { @Override public void apply() { } } );
+  showLightingCheckbox = new Button("Light", "v", true, null,  width - UI_COLUMN_WIDTH + 10 + 110, uiY, 100, UI_BUTTON_HEIGHT, new Thunk() { @Override public void apply() { } }, null );
   showLightingCheckbox.selected = true;
   uiY += UI_BUTTON_HEIGHT + UI_BUTTON_BETWEEN;
-  showNormalsCheckbox = new Button("Normals", "b", true, null,  width - UI_COLUMN_WIDTH + 10, uiY, 100, UI_BUTTON_HEIGHT, new Thunk() { @Override public void apply() { } } );
+  showNormalsCheckbox = new Button("Normals", "b", true, null,  width - UI_COLUMN_WIDTH + 10, uiY, 100, UI_BUTTON_HEIGHT, new Thunk() { @Override public void apply() { } }, null );
   showNormalsCheckbox.selected = true;
-  showTexturesCheckbox = new Button("Texture", "n", true, null,  width - UI_COLUMN_WIDTH + 10 + 110, uiY, 100, UI_BUTTON_HEIGHT, new Thunk() { @Override public void apply() { } } );
+  showTexturesCheckbox = new Button("Texture", "n", true, null,  width - UI_COLUMN_WIDTH + 10 + 110, uiY, 100, UI_BUTTON_HEIGHT, new Thunk() { @Override public void apply() { } }, null );
   showTexturesCheckbox.selected = true;
   uiY += UI_BUTTON_HEIGHT + UI_BUTTON_BETWEEN;
   new Line(uiY, null);
   uiY += UI_BUTTON_BETWEEN;  
   
-  new Button("Face", "f", false, null,  width - UI_COLUMN_WIDTH + 10, uiY, 100, UI_BUTTON_HEIGHT, new Thunk() { @Override public void apply() {  addFace(); } } );
+  new Button("Face", "f", false, null,  width - UI_COLUMN_WIDTH + 10, uiY, 100, UI_BUTTON_HEIGHT, new Thunk() { @Override public void apply() {  addFace(); } }, null );
   uiY += UI_BUTTON_HEIGHT + UI_BUTTON_BETWEEN;
-  new Button("Cube", "/", false, null,  width - UI_COLUMN_WIDTH + 10, uiY, 100, UI_BUTTON_HEIGHT, new Thunk() { @Override public void apply() {  makeCube(); } } );
-  new Button("Sphere", "?", false, null,  width - UI_COLUMN_WIDTH + 10 + 110, uiY, 100, UI_BUTTON_HEIGHT, new Thunk() { @Override public void apply() {  makeSphere(); } } );  
+  new Button("Cube", "/", false, null,  width - UI_COLUMN_WIDTH + 10, uiY, 100, UI_BUTTON_HEIGHT, new Thunk() { @Override public void apply() {  makeCube(); } }, null );
+  new Button("Sphere", "?", false, null,  width - UI_COLUMN_WIDTH + 10 + 110, uiY, 100, UI_BUTTON_HEIGHT, new Thunk() { @Override public void apply() {  makeSphere(); } }, null );  
   uiY += UI_BUTTON_HEIGHT + UI_BUTTON_BETWEEN;
-  new Button("Toggle Normal", "\\", false, null,  width - UI_COLUMN_WIDTH + 10, uiY, 100, UI_BUTTON_HEIGHT, new Thunk() { @Override public void apply() {  toggleNormals(); } } ); 
+  new Button("Toggle Normal", "\\", false, null,  width - UI_COLUMN_WIDTH + 10, uiY, 100, UI_BUTTON_HEIGHT, new Thunk() { @Override public void apply() {  toggleNormals(); } }, null ); 
   uiY += UI_BUTTON_HEIGHT + UI_BUTTON_BETWEEN;
   new Line(uiY, null);
   uiY += UI_BUTTON_BETWEEN;  
   editLabel = new Label("EDIT", uiY, null);
   uiY += UI_BUTTON_TEXT + UI_BUTTON_TEXT; 
   
+  int headOfGroupY =  uiY;
   vertexEditGroup = new UIGroup();
   vEditor = new VectorEditor("X", "Y", "Z", true, false, width - UI_COLUMN_WIDTH + 10, uiY, new Thunk() { @Override public void apply() { updateSelectedVertexPosition(); } }, vertexEditGroup);
   
@@ -374,6 +398,10 @@ void setup() {
   materialDiffuseImage = new UIImage(width - UI_COLUMN_WIDTH + 10, uiY, 30, 30, materialEditGroup);
   //ColorPicker(int xIn, int yIn, int r, int g, int b, Thunk valueUpdatedIn, UIGroup group) {  
   //colorPicker = new ColorPicker(width - UI_COLUMN_WIDTH - 150, 920, 255, 0, 0, new Thunk() { @Override public void apply() { } }, materialEditGroup);
+  
+  newMaterialGroup = new UIGroup();
+  new Button("Add Material", "m", false, null,  width - UI_COLUMN_WIDTH + 10, headOfGroupY, 100, UI_BUTTON_HEIGHT, new Thunk() { @Override public void apply() {  addMaterial(); } }, newMaterialGroup );
+  newMaterialGroup.setVisible(false);
   
   commandBox = new TextBox("", "COMMAND", width - UI_COLUMN_WIDTH + 10, height - 27, UI_COLUMN_WIDTH- 20, UI_BUTTON_HEIGHT, new Thunk() { @Override public void apply() { executeCommand(); } }, null );
   commandBox.anchorBottom = true;

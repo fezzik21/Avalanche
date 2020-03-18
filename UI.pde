@@ -170,7 +170,8 @@ class Button extends UIElement {
   public boolean selected;
   String group;
   
-  Button(String tIn, String tipIn, boolean isCheckboxIn, String groupIn, int xIn, int yIn, int wIn, int hIn, Thunk onClickIn) {
+  Button(String tIn, String tipIn, boolean isCheckboxIn, String groupIn, int xIn, int yIn, int wIn, int hIn, Thunk onClickIn, UIGroup uigroup) {
+    super(uigroup);
     x = xIn; y = yIn; w = wIn; h = hIn;
     t = tIn;
     tip = tipIn;
