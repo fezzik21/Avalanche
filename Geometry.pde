@@ -84,17 +84,55 @@ Vector3f faceNormal(Face f) {
 void toggleNormals() {
   for(int i = 0 ; i < faces.size(); ++i) {
     Face f = faces.get(i);
-    if(f.v1.hasNormal) {
-      f.v1.hasNormal = f.v2.hasNormal = f.v3.hasNormal = false;
-    } else {
-      Vector3f n = faceNormal(f);
-      f.v1.setNormal(n.x, n.y, n.z);
-      f.v2.setNormal(n.x, n.y, n.z);
-      f.v3.setNormal(n.x, n.y, n.z);
-      
+    if(f.selected) {
+      if(f.v1.hasNormal) {
+        f.v1.hasNormal = f.v2.hasNormal = f.v3.hasNormal = false;
+      } else {
+        Vector3f n = faceNormal(f);
+        f.v1.setNormal(n.x, n.y, n.z);
+        f.v2.setNormal(n.x, n.y, n.z);
+        f.v3.setNormal(n.x, n.y, n.z);
+        
+      }
+    }
+  }  
+}
+
+void joinVerts() {
+  ArrayList<Vertex> selected = new ArrayList<Vertex>();
+  centerOfMass = new Vertex(0.0, 0.0, 0.0);
+  for (Vertex v: vertices) {
+    if(v.selected) {
+      selected.add(v);
+      centerOfMass.x += v.x;
+      centerOfMass.y += v.y;
+      centerOfMass.z += v.z;
     }
   }
-  
+  if(selected.size() == 0) {
+    return;
+  }
+  centerOfMass.x /= selected.size();
+  centerOfMass.y /= selected.size();
+  centerOfMass.z /= selected.size();
+  Vertex toSave = selected.get(0);
+  toSave.x = centerOfMass.x; toSave.y = centerOfMass.y; toSave.z = centerOfMass.z;
+  for(Face f: faces) {
+    if(f.v1.v.selected) {
+      f.v1.v = toSave;
+    }
+    if(f.v2.v.selected) {
+      f.v2.v = toSave;
+    }
+    if(f.v3.v.selected) {
+      f.v3.v = toSave;
+    }
+  }
+  for(Vertex v : selected) {
+    vertices.remove(v);
+  }
+  vertices.add(toSave);
+  updateSelected();
 }
 
 Vertex makeVertex(float x, float y, float z) {

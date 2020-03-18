@@ -21,6 +21,9 @@ void uiMouseWheel(MouseEvent event) {
 }
   
 boolean uiTakesKeyInput() {
+  if(splashActive) {
+    return true;
+  }
   for (int i = elements.size()-1; i >= 0; i--) {
     UIElement e = elements.get(i);
     if(e instanceof TextBox) {
@@ -34,6 +37,9 @@ boolean uiTakesKeyInput() {
 }
 
 boolean uiTakesMouseInput() {
+  if(splashActive) {
+    return true;
+  }
   for (int i = elements.size()-1; i >= 0; i--) {
     UIElement e = elements.get(i);
     if(e instanceof ColorPicker) {
@@ -472,18 +478,22 @@ class ColorPicker extends UIElement {
     stroke(255, 255, 255);
     rect(x, y, 130, 160);
     //colorMode(HSB, 100);
-    for (int s = 0; s < 100; s++) {
-      for(int v = 0; v < 150; v++) {
-        Vector3f hsv = new Vector3f(hue, s / 100.0, v / 150.0);
+    int d = 1;//displayDensity();
+    float dw = 100 * d;
+    float dh = 150 * d;
+    float dxh = 10 * d;
+    for (int s = 0; s < dw; s++) {
+      for(int v = 0; v < dh; v++) {
+        Vector3f hsv = new Vector3f(hue, s / dw, v / dh);
         Vector3f rgb = hsvToRgb(hsv);
-        set(x + 10 + s, y + 5 + v, color(rgb.x, rgb.y, rgb.z));        
+        set((x + 10) * d + s, (y + 5) * d + v, color(rgb.x, rgb.y, rgb.z));        
       }
     }
-    for(int h = 0; h < 100; h++) {
-      for(int xh = 0; xh < 10; xh++) {
-        Vector3f hsv = new Vector3f(h * (360.0 / 100.0), 1.0, 1.0);
+    for(int h = 0; h < dw; h++) {
+      for(int xh = 0; xh < dxh; xh++) {
+        Vector3f hsv = new Vector3f(h * (360.0 / dw), 1.0, 1.0);
         Vector3f rgb = hsvToRgb(hsv);
-        set(x + 115 + xh, y + 5 + h, color(rgb.x, rgb.y, rgb.z));
+        set((x + 115) * d + xh, (y + 5) * d + h, color(rgb.x, rgb.y, rgb.z));
       }
     }
     fill(255, 255, 255);

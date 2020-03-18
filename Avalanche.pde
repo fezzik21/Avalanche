@@ -1,14 +1,9 @@
 //text box scroll contents
 //continue to implement FBX loader
 //allow graphical editing of normals
-//Allow for a simple "computational framework" (QScript)
 //rotate object mode
 //load other textures (e.g. bump, specular) (might require writing a custom shader?)
-//create a new material
-//  add a (non-working) "<new material>" option
 //something's wrong with changing materials, the colors get screwed up eventually
-//allow material to load a new texture
-//  display the current texture somehow
 //move command uses Ctrl to only move in one axis
 //camera rotate uses Ctrl to only rotate in one axis
 //add a help button (someplace), or at least some help documentation someplace
@@ -19,12 +14,23 @@
 //material drop down box has a bar indicating how many items there are
 //scaling performance is bad on large model (don't recalculate center of mass)
 //File a trademark for Avalanche 3D (costs about $300, https://guides.wsj.com/small-business/starting-a-business/how-to-trademark-a-company-name/)
-//Adding a material to a triangle that doesn't have it
 //editing material on a group of faces
-//adding a material when there are no materials to add
+//add a new material in the drop down
+//open up a new texture file by clicking on the square to add a texture
+//windows viewer uses the midele color, my thing uses the top
+
+//web page:
+//  how you can help: help writing code, help donate, help get the word out
+//  download page
+//    build it for different operating systems
+//  faq (question page)
+//  hotkey/controls sheet (printable 8.5 x 11)
+
+
 
 
 import java.util.*;
+import java.util.prefs.Preferences;
 import org.joml.*;
 
 ArrayList<Vertex> vertices;
@@ -40,7 +46,7 @@ Vertex singleSelectedVertex;
 Face singleSelectedFace;
 Button showEdgesCheckbox, showFacesCheckbox, showLightingCheckbox, showNormalsCheckbox, showTexturesCheckbox, selectBackFacingCheckbox, fullScreenCheckbox;
 UIImage materialDiffuseImage;
-UIGroup vertexEditGroup, faceEditGroup, materialEditGroup, newMaterialGroup;
+UIGroup vertexEditGroup, multipleVertexEditGroup, faceEditGroup, materialEditGroup, newMaterialGroup;
 VectorEditor vEditor;
 VectorEditor n1Editor, n2Editor, n3Editor;
 VectorEditor t1Editor, t2Editor, t3Editor;
@@ -62,6 +68,7 @@ boolean lastKeyDown[];
 boolean keyCodeDown[];
 boolean lastKeyCodeDown[];
   
+Preferences prefs;
 
 void resetMaterials() {
   ArrayList<String> materialNames = new ArrayList<String>();
@@ -119,7 +126,8 @@ void updateSelected() {
   }
   centerOfMass.x /= selected.size();
   centerOfMass.y /= selected.size();
-  centerOfMass.z /= selected.size();  
+  centerOfMass.z /= selected.size();
+  multipleVertexEditGroup.setVisible(false);
   vertexEditGroup.setVisible(false);
   faceEditGroup.setVisible(false);
   materialEditGroup.setVisible(false);
@@ -127,6 +135,9 @@ void updateSelected() {
   if(selected.size() == 1) {
     singleSelectedVertex = selected.get(0);
     vertexEditGroup.setVisible(true);
+  }
+  if(selected.size() > 0) {
+    multipleVertexEditGroup.setVisible(true);
   }
   boolean allSelectedFacesHaveNoMaterial = true;
   boolean allSelectedFacesHaveSameMaterial = true;
@@ -245,7 +256,7 @@ void settings() {
     oldWidth = 1280;
     oldHeight = 1024;
   }
-  pixelDensity(displayDensity());
+  //pixelDensity(displayDensity());
   
   PJOGL.setIcon("Avalanche_Icon.png");
 }  
@@ -272,10 +283,35 @@ void toggleFullScreen() {
 }
 
 void addMaterial() {
+  //Use the first material
+  for(Face f: faces) {
+    if(f.selected) {
+      if(materials.size() == 0) {
+        f.m = new Material("Avalanche1");
+        materials.put(f.m.name, f.m);
+        resetMaterials();
+      } else { 
+        Iterator<Material> v = materials.values().iterator();
+        f.m = v.next();    
+      }
+      Vector3f n = faceNormal(f);
+      f.v1.setNormal(n.x, n.y, n.z);
+      f.v2.setNormal(n.x, n.y, n.z);
+      f.v3.setNormal(n.x, n.y, n.z);
+      f.v1.setTexture(0.0, 0.0);
+      f.v2.setTexture(0.0, 1.0);
+      f.v3.setTexture(1.0, 0.0);
+    }
+  }
+  updateSelected();
 }
 
 void setup() {
-  surface.setTitle("Avalanche 3D Modeler");  
+  prefs = Preferences.userRoot().node(this.getClass().getName());
+  if(prefs.getBoolean("SplashSeen", false)) {
+    splashActive = false;
+  }
+  surface.setTitle("Avalanche 3D Editor");  
   frameRate(30);
   surface.setResizable(true);
   
@@ -301,8 +337,8 @@ void setup() {
   uiY += UI_BUTTON_BETWEEN;
   new Line(uiY, null);
   uiY += UI_BUTTON_BETWEEN;
-  new Button("Place", "1", false, "Mode",  width - UI_COLUMN_WIDTH + 10, uiY, 100, UI_BUTTON_HEIGHT, new Thunk() { @Override public void apply() { mode = MODE_PLACE; } }, null ).selected = true;
-  new Button("Select Vertex", "2", false, "Mode",  width - UI_COLUMN_WIDTH + 10 + 110, uiY, 100, UI_BUTTON_HEIGHT, new Thunk() { @Override public void apply() { clearSelected(); mode = MODE_SELECT_VERTEX; } }, null );
+  new Button("Place", "1", false, "Mode",  width - UI_COLUMN_WIDTH + 10, uiY, 100, UI_BUTTON_HEIGHT, new Thunk() { @Override public void apply() { mode = MODE_PLACE; } }, null );
+  new Button("Select Vertex", "2", false, "Mode",  width - UI_COLUMN_WIDTH + 10 + 110, uiY, 100, UI_BUTTON_HEIGHT, new Thunk() { @Override public void apply() { clearSelected(); mode = MODE_SELECT_VERTEX; } }, null ).selected = true;
   uiY += UI_BUTTON_HEIGHT + UI_BUTTON_BETWEEN;
   new Button("Select Face", "3", false, "Mode",  width - UI_COLUMN_WIDTH + 10, uiY, 100, UI_BUTTON_HEIGHT, new Thunk() { @Override public void apply() { clearSelected(); mode = MODE_SELECT_FACE; } }, null );
   new Button("Move", "4", false, "Mode",  width - UI_COLUMN_WIDTH + 10 + 110, uiY, 100, UI_BUTTON_HEIGHT, new Thunk() { @Override public void apply() { mode = MODE_MOVE; } }, null );
@@ -363,6 +399,9 @@ void setup() {
   
   int headOfGroupY =  uiY;
   vertexEditGroup = new UIGroup();
+  multipleVertexEditGroup = new UIGroup();
+  new Button("Join Verts", "j", false, null,  width - UI_COLUMN_WIDTH + 10, uiY, 100, UI_BUTTON_HEIGHT, new Thunk() { @Override public void apply() {  joinVerts(); } }, multipleVertexEditGroup ); 
+  uiY += UI_BUTTON_HEIGHT + UI_BUTTON_BETWEEN + UI_BUTTON_BETWEEN;  
   vEditor = new VectorEditor("X", "Y", "Z", true, false, width - UI_COLUMN_WIDTH + 10, uiY, new Thunk() { @Override public void apply() { updateSelectedVertexPosition(); } }, vertexEditGroup);
   
   faceEditGroup = new UIGroup();
@@ -396,11 +435,9 @@ void setup() {
   materialSelector = new DropDownList(materialNames, width - UI_COLUMN_WIDTH + 10, savedUIY, UI_COLUMN_WIDTH - 40, 25, new Thunk() { @Override public void apply() { updateMaterialChoice(); } }, materialEditGroup);
   
   materialDiffuseImage = new UIImage(width - UI_COLUMN_WIDTH + 10, uiY, 30, 30, materialEditGroup);
-  //ColorPicker(int xIn, int yIn, int r, int g, int b, Thunk valueUpdatedIn, UIGroup group) {  
-  //colorPicker = new ColorPicker(width - UI_COLUMN_WIDTH - 150, 920, 255, 0, 0, new Thunk() { @Override public void apply() { } }, materialEditGroup);
   
   newMaterialGroup = new UIGroup();
-  new Button("Add Material", "m", false, null,  width - UI_COLUMN_WIDTH + 10, headOfGroupY, 100, UI_BUTTON_HEIGHT, new Thunk() { @Override public void apply() {  addMaterial(); } }, newMaterialGroup );
+  new Button("Apply A Material", "m", false, null,  width - UI_COLUMN_WIDTH + 10, headOfGroupY, 210, UI_BUTTON_HEIGHT, new Thunk() { @Override public void apply() {  addMaterial(); } }, newMaterialGroup );
   newMaterialGroup.setVisible(false);
   
   commandBox = new TextBox("", "COMMAND", width - UI_COLUMN_WIDTH + 10, height - 27, UI_COLUMN_WIDTH- 20, UI_BUTTON_HEIGHT, new Thunk() { @Override public void apply() { executeCommand(); } }, null );
@@ -414,7 +451,7 @@ void setup() {
   windows.add(new Window(windowWidth + 5, windowHeight + 5, windowWidth, windowHeight, VIEW_3D));
   
   updateSelected();
-  mode = MODE_PLACE; 
+  mode = MODE_SELECT_VERTEX; 
   registerCommands();
   thread("updateUI");
   textSize(12);
@@ -429,15 +466,22 @@ void mouseWheel(MouseEvent event) {
 }
 
 void mouseClicked() {
-  if(dragWithoutPressInvalidatesClick) {
-    //we got a drag, no intervening press, then a click.  we don't want this click in our UI.
-    dragWithoutPressInvalidatesClick = false;
-    if(mode != MODE_PLACE) {
-      return;
-    }
+  if(splashActive) {
+    prefs.putBoolean("SplashSeen", true);
+    splashActive = false;
+    return;
   }
-  for(Window w : windows) {
-    w.mouseClicked();
+  if(!uiTakesMouseInput()) {
+    if(dragWithoutPressInvalidatesClick) {
+      //we got a drag, no intervening press, then a click.  we don't want this click in our UI.
+      dragWithoutPressInvalidatesClick = false;
+      if(mode != MODE_PLACE) {
+        return;
+      }
+    }
+    for(Window w : windows) {
+      w.mouseClicked();
+    }
   }
 }
 
@@ -586,5 +630,6 @@ void draw() {
   }
   
   drawUI();
+  drawSplash();
   //saveFrame("test-######.tif");
 }
