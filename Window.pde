@@ -719,13 +719,25 @@ class Window {
       }
     } else {
       if(key == '`') {
+        ArrayList<Vertex> selected = new ArrayList<Vertex>();
+        for (Vertex v: vertices) {
+          if(v.selected) {
+            selected.add(v);
+          }
+        }
+        ArrayList<Face> selectedFaces = new ArrayList<Face>();
+        for (Face f: faces) {
+          if(f.selected) {
+            selectedFaces.add(f);
+          }
+        }
         Vertex centerOfMass = new Vertex(0.0, 0.0, 0.0);
         Vertex min = new Vertex(MAX_FLOAT, MAX_FLOAT, MAX_FLOAT);
         Vertex max = new Vertex(-MAX_FLOAT, -MAX_FLOAT, -MAX_FLOAT);
-        
         float scale = 1.0;
-        for (int i = 0; i < vertices.size(); i++) {
-            Vertex v = vertices.get(i);
+        if((selected.size() == 0) && (selectedFaces.size() == 0)) {
+          println("hi1");
+          for (Vertex v : vertices) {
             centerOfMass.x += v.x * (1.0 / vertices.size());
             centerOfMass.y += v.y * (1.0 / vertices.size());
             centerOfMass.z += v.z * (1.0 / vertices.size());
@@ -735,11 +747,58 @@ class Window {
             max.x = max(max.x, v.x);
             max.y = max(max.y, v.y);
             max.z = max(max.z, v.z);
-        }
+          }    
+        } else if(selected.size() > 0) {
+          println("hi2");
+          for (Vertex v : selected) {
+            centerOfMass.x += v.x * (1.0 / selected.size());
+            centerOfMass.y += v.y * (1.0 / selected.size());
+            centerOfMass.z += v.z * (1.0 / selected.size());
+            min.x = min(min.x, v.x);
+            min.y = min(min.y, v.y);
+            min.z = min(min.z, v.z);
+            max.x = max(max.x, v.x);
+            max.y = max(max.y, v.y);
+            max.z = max(max.z, v.z);
+          }    
+        } else {
+          println("hi3");
+          for (Face f : faces) {
+            centerOfMass.x += f.v1.v.x * (0.33333333333 / faces.size());
+            centerOfMass.y += f.v1.v.y * (0.33333333333 / faces.size());
+            centerOfMass.z += f.v1.v.z * (0.33333333333 / faces.size());
+            min.x = min(min.x, f.v1.v.x);
+            min.y = min(min.y, f.v1.v.y);
+            min.z = min(min.z, f.v1.v.z);
+            max.x = max(max.x, f.v1.v.x);
+            max.y = max(max.y, f.v1.v.y);
+            max.z = max(max.z, f.v1.v.z);
+            centerOfMass.x += f.v2.v.x * (0.33333333333 / faces.size());
+            centerOfMass.y += f.v2.v.y * (0.33333333333 / faces.size());
+            centerOfMass.z += f.v2.v.z * (0.33333333333 / faces.size());
+            min.x = min(min.x, f.v2.v.x);
+            min.y = min(min.y, f.v2.v.y);
+            min.z = min(min.z, f.v2.v.z);
+            max.x = max(max.x, f.v2.v.x);
+            max.y = max(max.y, f.v2.v.y);
+            max.z = max(max.z, f.v2.v.z);
+            centerOfMass.x += f.v3.v.x * (0.33333333333 / faces.size());
+            centerOfMass.y += f.v3.v.y * (0.33333333333 / faces.size());
+            centerOfMass.z += f.v3.v.z * (0.33333333333 / faces.size());
+            min.x = min(min.x, f.v3.v.x);
+            min.y = min(min.y, f.v3.v.y);
+            min.z = min(min.z, f.v3.v.z);
+            max.x = max(max.x, f.v3.v.x);
+            max.y = max(max.y, f.v3.v.y);
+            max.z = max(max.z, f.v3.v.z);
+          }
+        }    
         scale = max((max.x - min.x), max(max.y - min.y, max.z - min.z));
+        if(scale < 0.5) {
+          scale = 0.5;
+        }
         //scale view to look at this
         modelViewMatrix = new Matrix4f();
-        modelViewMatrix.scale(VIEW_SCALE * scale * 0.05, VIEW_SCALE * scale * 0.05, VIEW_SCALE * scale * 0.05);
         if(viewType == VIEW_X) {
           modelViewMatrix.translate(0.0, centerOfMass.y, centerOfMass.z);
         } else if(viewType == VIEW_Y) {
@@ -747,6 +806,7 @@ class Window {
         } else if(viewType == VIEW_Z) {
           modelViewMatrix.translate(centerOfMass.x, centerOfMass.y, 0.0);
         }  
+        modelViewMatrix.scale(VIEW_SCALE * scale * 0.05, VIEW_SCALE * scale * 0.05, VIEW_SCALE * scale * 0.05);
       }
     }
   }

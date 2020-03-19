@@ -1,34 +1,3 @@
-//text box scroll contents
-//continue to implement FBX loader
-//allow graphical editing of normals
-//rotate object mode
-//load other textures (e.g. bump, specular) (might require writing a custom shader?)
-//something's wrong with changing materials, the colors get screwed up eventually
-//move command uses Ctrl to only move in one axis
-//camera rotate uses Ctrl to only rotate in one axis
-//add a help button (someplace), or at least some help documentation someplace
-//save file completion bar
-//process material params - Ke, Ns, etc.
-//clipping on milennium falcon in the ortho views
-//camera rotate is still bad.  need some help with it.
-//material drop down box has a bar indicating how many items there are
-//scaling performance is bad on large model (don't recalculate center of mass)
-//File a trademark for Avalanche 3D (costs about $300, https://guides.wsj.com/small-business/starting-a-business/how-to-trademark-a-company-name/)
-//editing material on a group of faces
-//add a new material in the drop down
-//open up a new texture file by clicking on the square to add a texture
-//windows viewer uses the midele color, my thing uses the top
-
-//web page:
-//  how you can help: help writing code, help donate, help get the word out
-//  download page
-//    build it for different operating systems
-//  faq (question page)
-//  hotkey/controls sheet (printable 8.5 x 11)
-
-
-
-
 import java.util.*;
 import java.util.prefs.Preferences;
 import org.joml.*;
@@ -61,7 +30,6 @@ boolean ctrlPressed = false;
 
 //This is here to keep the UI from reporting press, drag, release, click - we don't want the click at the end
 boolean dragWithoutPressInvalidatesClick = false;
-//PImage sampleTexture;
 
 boolean keyDown[];
 boolean lastKeyDown[];
