@@ -356,7 +356,7 @@ void setup() {
   new Button("Face", "f", false, null,  width - UI_COLUMN_WIDTH + 10, uiY, 100, UI_BUTTON_HEIGHT, new Thunk() { @Override public void apply() {  addFace(); } }, null );
   uiY += UI_BUTTON_HEIGHT + UI_BUTTON_BETWEEN;
   new Button("Cube", "/", false, null,  width - UI_COLUMN_WIDTH + 10, uiY, 100, UI_BUTTON_HEIGHT, new Thunk() { @Override public void apply() {  makeCube(); } }, null );
-  new Button("Sphere", "?", false, null,  width - UI_COLUMN_WIDTH + 10 + 110, uiY, 100, UI_BUTTON_HEIGHT, new Thunk() { @Override public void apply() {  makeSphere(); } }, null );  
+  new Button("Sphere", ".", false, null,  width - UI_COLUMN_WIDTH + 10 + 110, uiY, 100, UI_BUTTON_HEIGHT, new Thunk() { @Override public void apply() {  makeSphere(); } }, null );  
   uiY += UI_BUTTON_HEIGHT + UI_BUTTON_BETWEEN;
   new Button("Toggle Normal", "\\", false, null,  width - UI_COLUMN_WIDTH + 10, uiY, 100, UI_BUTTON_HEIGHT, new Thunk() { @Override public void apply() {  toggleNormals(); } }, null ); 
   uiY += UI_BUTTON_HEIGHT + UI_BUTTON_BETWEEN;
