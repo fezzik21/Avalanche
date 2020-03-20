@@ -136,7 +136,6 @@ class Camera {
     Vertex max = new Vertex(-MAX_FLOAT, -MAX_FLOAT, -MAX_FLOAT);
     float scale = 1.0;
     if((selected.size() == 0) && (selectedFaces.size() == 0)) {
-      println("hi1");
       for (Vertex v : vertices) {
         centerOfMass.x += v.x * (1.0 / vertices.size());
         centerOfMass.y += v.y * (1.0 / vertices.size());
@@ -149,7 +148,6 @@ class Camera {
         max.z = max(max.z, v.z);
       }    
     } else if(selected.size() > 0) {
-      println("hi2");
       for (Vertex v : selected) {
         centerOfMass.x += v.x * (1.0 / selected.size());
         centerOfMass.y += v.y * (1.0 / selected.size());
@@ -162,7 +160,6 @@ class Camera {
         max.z = max(max.z, v.z);
       }    
     } else {
-      println("hi3");
       for (Face f : faces) {
         centerOfMass.x += f.v1.v.x * (0.33333333333 / faces.size());
         centerOfMass.y += f.v1.v.y * (0.33333333333 / faces.size());

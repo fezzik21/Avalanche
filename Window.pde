@@ -313,6 +313,7 @@ class Window {
       if(mode == MODE_SELECT_VERTEX || mode == MODE_SELECT_FACE) {
         selecting = true;
       } else if (mode == MODE_MOVE) {
+      } else if (mode == MODE_ROTATE) {
       }
     } 
     selectMouseStartX = mX;
@@ -373,7 +374,6 @@ class Window {
     } else if(mode == MODE_MOVE) {
       boolean needsAdding = (currentUvm == null);
       if(needsAdding) {
-        println("Adding UVM");
         currentUvm = new UndoVertexMovement();
       }
       for (int i = vertices.size()-1; i >= 0; i--) {
@@ -433,7 +433,43 @@ class Window {
       updateSelected();
       selectMouseStartX = selectMouseEndX - (gridOffsetX / scale.z);
       selectMouseStartY = selectMouseEndY - (gridOffsetY / scale.z);
-    } else if(mode == MODE_SCALE) {
+    }  else if (mode == MODE_ROTATE) {
+      println("hi1");
+      for(Vertex v: vertices) {
+        if(v.selected) {
+          switch(viewType) {
+            case VIEW_X:
+            { 
+              Vector3f ve = new Vector3f(v.x, v.y, v.z);
+              ve.rotateY(-(selectMouseEndX - selectMouseStartX) * scale.z);
+              ve.rotateZ(-(selectMouseEndY - selectMouseStartY) * scale.z);
+              v.x = ve.x; v.y = ve.y; v.z = ve.z;
+            }
+            break;
+            case VIEW_Y:
+            {
+              Vector3f ve = new Vector3f(v.x, v.y, v.z);
+              ve.rotateZ(-(selectMouseEndX - selectMouseStartX) * scale.z);
+              ve.rotateX(-(selectMouseEndY - selectMouseStartY) * scale.z);
+              v.x = ve.x; v.y = ve.y; v.z = ve.z;
+            }
+            break;
+            case VIEW_Z:
+            {
+              Vector3f ve = new Vector3f(v.x, v.y, v.z);
+              ve.rotateY((selectMouseEndX - selectMouseStartX) * scale.z);
+              ve.rotateX(-(selectMouseEndY - selectMouseStartY) * scale.z);
+              v.x = ve.x; v.y = ve.y; v.z = ve.z;
+            }
+            break;
+            case VIEW_3D:
+            break;
+          }
+        }
+      }
+      selectMouseStartX = selectMouseEndX;
+      selectMouseStartY = selectMouseEndY;
+    }  else if(mode == MODE_SCALE) {
       for (int i = vertices.size()-1; i >= 0; i--) {
         Vertex v = vertices.get(i);
         if(v.selected) {
