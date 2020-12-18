@@ -441,24 +441,27 @@ class Window {
             case VIEW_X:
             { 
               Vector3f ve = new Vector3f(v.x, v.y, v.z);
-              ve.rotateY(-(selectMouseEndX - selectMouseStartX) * scale.z);
-              ve.rotateZ(-(selectMouseEndY - selectMouseStartY) * scale.z);
+              ve.rotateX(-((selectMouseStartX - selectMouseEndX) + (selectMouseEndY - selectMouseStartY)) * scale.z * 0.1);
+              //ve.rotateY(-(selectMouseEndX - selectMouseStartX) * scale.z);
+              //ve.rotateZ(-(selectMouseEndY - selectMouseStartY) * scale.z);
               v.x = ve.x; v.y = ve.y; v.z = ve.z;
             }
             break;
             case VIEW_Y:
             {
               Vector3f ve = new Vector3f(v.x, v.y, v.z);
-              ve.rotateZ(-(selectMouseEndX - selectMouseStartX) * scale.z);
-              ve.rotateX(-(selectMouseEndY - selectMouseStartY) * scale.z);
+              ve.rotateY(-((selectMouseStartX - selectMouseEndX) + (selectMouseEndY - selectMouseStartY)) * scale.z * 0.1);
+              //ve.rotateZ(-(selectMouseEndX - selectMouseStartX) * scale.z);
+              //ve.rotateX(-(selectMouseEndY - selectMouseStartY) * scale.z);
               v.x = ve.x; v.y = ve.y; v.z = ve.z;
             }
             break;
             case VIEW_Z:
             {
               Vector3f ve = new Vector3f(v.x, v.y, v.z);
-              ve.rotateY((selectMouseEndX - selectMouseStartX) * scale.z);
-              ve.rotateX(-(selectMouseEndY - selectMouseStartY) * scale.z);
+              ve.rotateZ(-((selectMouseStartX - selectMouseEndX) + (selectMouseEndY - selectMouseStartY)) * scale.z * 0.1);
+              //ve.rotateY((selectMouseEndX - selectMouseStartX) * scale.z);
+              //ve.rotateX(-(selectMouseEndY - selectMouseStartY) * scale.z);
               v.x = ve.x; v.y = ve.y; v.z = ve.z;
             }
             break;
